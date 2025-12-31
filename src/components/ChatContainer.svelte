@@ -3,7 +3,6 @@
 	import { streamText, type ModelMessage } from "ai";
 	import LMStudioConnectPlugin from "src/main";
 	import { Role, Status, type ChatMessage } from "src/services/models";
-	import ChatInput from "./ChatInput.svelte";
 	import TopToolbar from "./TopToolbar.svelte";
 	import { tick } from "svelte";
 	import { setPluginContext } from "src/services/context";
@@ -15,6 +14,7 @@
 		toV1BaseURL,
 	} from "src/settings.svelte";
 	import ErrorMessage from "./ErrorMessage.svelte";
+	import ChatInputDeluxe from "./ChatInputDeluxe.svelte";
 
 	let { plugin }: { plugin: LMStudioConnectPlugin } = $props();
 	setPluginContext(plugin);
@@ -29,12 +29,12 @@
 			baseURL,
 		}),
 	);
-
-	let input = $state("");
+	
 	let messages: ChatMessage[] = $state([]);
 	let bufferHeight = $state(0);
 	let errorMessage = $state("");
 	let messagesContainer: HTMLUListElement;
+	let input: ChatInputDeluxe;
 
 	const gap = 20;
 
@@ -50,7 +50,7 @@
 		messages.push({
 			role: Role.User,
 			status: Status.Complete,
-			parts: [input],
+			parts: [input.text()],
 		});
 		messages.push({
 			role: Role.Assistant,
@@ -67,14 +67,11 @@
 				requestServerRefresh();
 			},
 		});
-		input = "";
+		input.clear();
 
 		await tick();
 		const lastUserMessage = messagesContainer.children[messages.length - 2];
-		bufferHeight =
-			messagesContainer.clientHeight -
-			(lastUserMessage?.clientHeight ?? 0) -
-			gap;
+		bufferHeight = messagesContainer.clientHeight - (lastUserMessage?.clientHeight ?? 0) - gap;
 
 		const response = messages[messages.length - 1];
 		for await (const textPart of result.textStream) {
@@ -93,7 +90,7 @@
 	function resend() {
 		requestServerRefresh();
 		const lastUserMessage = messages.last()?.parts.first() || "";
-		input = lastUserMessage;
+		input.set(lastUserMessage);
 		messages = messages.slice(0, -1);
 		send();
 	}
@@ -116,7 +113,7 @@
 		<EmptyView />
 	{/if}
 
-	<ChatInput bind:input onsend={send} />
+	<ChatInputDeluxe bind:this={input} onsend={send} />
 </div>
 
 <style>
