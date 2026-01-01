@@ -8,17 +8,18 @@ import {
 import { RangeSetBuilder } from "@codemirror/state";
 
 const highlightMark = Decoration.mark({ class: "cm-note-ref-highlight" });
-const referenceBracketRegEx = /\[\[(\s*[^\]]*)/g; //matches anything after [[ until ]
 
 export const highlightPlugin = ViewPlugin.fromClass(
 	class {
 		decorations: DecorationSet;
+		referenceBracketRegEx = /\[\[(\s*[^\]]*)/g; //matches anything after [[ until ]
 
 		getMatches(view: EditorView) {
 			const builder = new RangeSetBuilder<Decoration>();
+			this.referenceBracketRegEx.lastIndex = 0;
 			for (let cursor = view.state.doc.iterRange(0), pos = 0, m; !cursor.next().done; pos += cursor.value.length) {
 				if (!cursor.lineBreak) {
-					while (m = referenceBracketRegEx.exec(cursor.value)) {
+					while (m = this.referenceBracketRegEx.exec(cursor.value)) {
 						const start = pos + m.index + 2; //skip the [[
 						builder.add(start, start + m[1].length, highlightMark);
 					}

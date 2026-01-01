@@ -29,14 +29,21 @@
 	<div in:fade bind:this={content}>
 		{#if message.role === Role.User}
 			{message.parts.join('')}	
-		{:else if message.status === Status.Pending}
-			<div class="loading" {@attach icon("loader")}></div>
-		{:else if message.status === Status.Streaming}
-			{#key message.parts}
-				<div {@attach markdown(message.parts.join(''))}></div>
-			{/key}	
+		{:else} 
+			{#if message.status === Status.Pending}
+				<div class="loading" {@attach icon("loader")}></div>
+			{/if}
+
+			{#if message.status === Status.Streaming}
+				{#key message.parts}
+					<div {@attach markdown(message.parts.join(''))}></div>
+				{/key}	
+			{/if}
 		{/if}
 	</div>
+	<!-- <div class="toolbar"> -->
+	<!-- 	<button {@attach icon("copy")} aria-label="copy" class="clickable-icon"></button> -->
+	<!-- </div> -->
 </li>
 
 <style>
@@ -75,7 +82,12 @@
 	li.assistant.complete > div:hover {
 		background-color: var(--background-primary);
 	}
-	
+
+	li.assistant > div :global(p:last-of-type) {
+		padding-bottom: 0;
+		margin-bottom: 0;
+	}
+
 	li.assistant:last-of-type {
 		min-height: var(--buffer-height);
 		flex-shrink: 0;
