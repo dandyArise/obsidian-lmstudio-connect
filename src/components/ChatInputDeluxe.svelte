@@ -4,11 +4,11 @@
 	import { closeBrackets } from "@codemirror/autocomplete";
 	import { icon } from "./Icon.svelte";
 	import ModelPicker from "./ModelPicker.svelte";
-	import { onMount } from "svelte";
+	import { onDestroy, onMount } from "svelte";
 	import { highlightPlugin } from "./NoteReferenceHighlighter";
 	import FileSuggest from "./FileSuggest.svelte";
 
-	let { input: value = $bindable(), onsend } = $props();
+	let { onsend } = $props();
 
 	export const text = () => editor.state.doc.toString();
 
@@ -33,6 +33,7 @@
 	let popoverRef: HTMLDivElement;
 	let popoverRefOffset: {x: number, y: number} = $state({x:0, y:0});
 	let fileSuggest: FileSuggest;
+	let canSend = $state(false);
 
 	function onkeydown(e: KeyboardEvent) {
 		if (e.key == "Enter" && !e.shiftKey) {
@@ -52,6 +53,7 @@
 				EditorView.lineWrapping,
 				EditorView.updateListener.of((v: ViewUpdate) => {
 					if (v.docChanged) {
+						canSend = v.state.doc.length > 0;	
 						//trigger popup if cursor within markdown ref brackets
 						const cursor = v.state.selection.main.head;
 						const line = v.state.doc.lineAt(cursor);
@@ -86,6 +88,8 @@
 			parent: editorDiv,
 		});
 	});
+	
+	onDestroy(() => editor?.destroy())
 </script>
 
 <div bind:this={chatbox} class="chatbox">
@@ -93,7 +97,7 @@
 
 	<div class="toolbar">
 		<ModelPicker />
-		<button onclick={onsend} disabled={!value} {@attach icon("arrow-up")} title="send"></button>
+		<button onclick={onsend} disabled={!canSend} {@attach icon("arrow-up")} title="send"></button>
 	</div>
 	
 	<!-- dynamically position over the search term so file suggest pops up nearby. -->

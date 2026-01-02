@@ -13,7 +13,7 @@ export default class LMStudioConnectPlugin extends Plugin {
 			save: this.saveData.bind(this),
 			load: this.loadData.bind(this)
 		});
-		this.settings = settings!;
+		this.settings = settings;
 		this.unloadSettings = dispose;
 
 		this.addSettingTab(new SettingsTab(this.app, this));
@@ -45,7 +45,12 @@ export default class LMStudioConnectPlugin extends Plugin {
 			leaf = workspace.getRightLeaf(false);
 			await leaf?.setViewState({ type: VIEW_TYPE_CHAT, active: true });
 		}
+		
+		if (!leaf) {
+			console.error("Unexpected error loading leaf.  Try reopening the plugin.");
+			return;
+		}
 
-		workspace.revealLeaf(leaf)
+		workspace.revealLeaf(leaf);
 	}
 }
