@@ -9,6 +9,7 @@
 
 	let isOpen: boolean = $state(false);
 	let suggestions: TFile[] = $state([]);
+	let selectedIndex = $state(0);
 
 	let popover: HTMLDivElement;
 	let files: TFile[] = [];
@@ -19,7 +20,8 @@
 			isOpen = true;
 			files = plugin.app.vault.getMarkdownFiles();
 		}
-
+		
+		selectedIndex = 0;
 		suggestions = getSuggestions(query);
 		//tick to ensure popover is measurable with stable contents
 		tick().then(() => {
@@ -54,8 +56,8 @@
 <div bind:this={popover} class={["popover", isOpen && "visible"]}>
 	<div>
 		<ul>
-			{#each suggestions as file}
-				<li>{file.basename}</li>
+		{#each suggestions as file, i}
+				<li class:selected={i === selectedIndex}>{file.basename}</li>
 			{/each}
 		</ul>
 	</div>
@@ -70,8 +72,38 @@
 		top: 0;
 		left: 0;
 	}
+	
+	/* needs to use full obsidian body so it can stretch outside leaf */
+	.popover > div {
+		max-width: var(--popover-width);
+		max-height: var(--popover-max-height);
+		font-size: var(--popover-font-size);
+	}
 
 	.popover.visible {
 		display: flex;
+	}
+
+	ul {
+		margin: 0;
+		padding: var(--size-2-3);
+	}
+
+	li {
+		align-items: baseline;
+		display: flex;
+		justify-content: space-between; 
+		overflow-y: auto;
+		padding: var(--size-2-3) var(--size-4-3);
+		white-space: pre-wrap;
+	}
+	li.selected {
+		background-color: var(--background-modifier-hover);
+	}
+	li.selected {
+		cursor: var(--cursor);
+		padding: var(--size-2-3) var(--size-4-3);
+		white-space: pre-wrap;
+		border-radius: var(--radius-s);
 	}
 </style>
