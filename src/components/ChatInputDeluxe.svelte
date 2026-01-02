@@ -5,8 +5,9 @@
 	import { icon } from "./Icon.svelte";
 	import ModelPicker from "./ModelPicker.svelte";
 	import { onDestroy, onMount } from "svelte";
-	import { highlightPlugin } from "./NoteReferenceHighlighter";
 	import FileSuggest from "./FileSuggest.svelte";
+	import { fileRefHighlighter } from "./codemirror/filerefhighlighter";
+	import { cursorWithinFileRef } from "./codemirror/cursorwithinfileref";
 
 	let { onsend } = $props();
 
@@ -30,8 +31,9 @@
 	let chatbox: HTMLDivElement;
 	let editorDiv: HTMLDivElement;
 	let editor: EditorView;
+	// svelte-ignore non_reactive_update
 	let popoverRef: HTMLDivElement;
-	let popoverRefOffset: {x: number, y: number} = $state({x:0, y:0});
+	let popoverRefOffset: { x: number; y: number } = $state({ x: 0, y: 0 });
 	let fileSuggest: FileSuggest;
 	let canSend = $state(false);
 
@@ -49,33 +51,21 @@
 				drawSelection(),
 				placeholder("Send a message to the model..."),
 				closeBrackets(),
-				highlightPlugin,
+				fileRefHighlighter,
+				cursorWithinFileRef,
 				EditorView.lineWrapping,
 				EditorView.updateListener.of((v: ViewUpdate) => {
 					if (v.docChanged) {
-						canSend = v.state.doc.length > 0;	
-						//trigger popup if cursor within markdown ref brackets
-						const cursor = v.state.selection.main.head;
-						const line = v.state.doc.lineAt(cursor);
-						const bracketRegEx = /\[\[(\s*[^\]]*)/g; //matches anything after [[ until ]
-						const matches = [...line.text.matchAll(bracketRegEx)];
-						const [hit] = matches.filter((m) => {
-							const groupSize = m[1].length;
-							const groupStart = line.from + m.index + 2; //don't count [[
-							const groupEnd = 1 + groupStart + Math.max(0, groupSize - 1);
+						canSend = v.state.doc.length > 0;
 
-							return cursor >= groupStart && cursor <= groupEnd;
-						});
-
-						if (hit) {
-							const matchText = hit[1];
-							//position popover reference element
-							popoverRef.innerText = matchText; //simulate same size box as match text 
-							const matchStartPos = line.from + hit.index + 2;
-							const pos = v.view.coordsAtPos(matchStartPos) || { left: 0, top: 0 };
+						// //trigger popup if cursor within markdown ref brackets
+						const cursorInRef = v.state.field(cursorWithinFileRef);
+						if (cursorInRef) {
+							popoverRef.innerText = cursorInRef.fileRefName; //simulate same size box as match text
+							const pos = v.view.coordsAtPos(cursorInRef.position) || { left: 0, top: 0 };
 							const chatboxRect = chatbox.getBoundingClientRect();
 							popoverRefOffset = { x: pos.left - chatboxRect.x, y: pos.top - chatboxRect.y }
-							fileSuggest.open(matchText);	
+							fileSuggest.open(cursorInRef.fileRefName);
 						} else {
 							fileSuggest.close();
 						}
@@ -88,8 +78,8 @@
 			parent: editorDiv,
 		});
 	});
-	
-	onDestroy(() => editor?.destroy())
+
+	onDestroy(() => editor?.destroy());
 </script>
 
 <div bind:this={chatbox} class="chatbox">
@@ -97,11 +87,22 @@
 
 	<div class="toolbar">
 		<ModelPicker />
-		<button onclick={onsend} disabled={!canSend} {@attach icon("arrow-up")} title="send"></button>
+		<button
+			onclick={onsend}
+			disabled={!canSend}
+			{@attach icon("arrow-up")}
+			title="send"
+		></button>
 	</div>
-	
+
 	<!-- dynamically position over the search term so file suggest pops up nearby. -->
-	<div bind:this={popoverRef} style:left={popoverRefOffset.x + 'px'} style:top={popoverRefOffset.y + 'px'} class="popover-ref" aria-hidden="true"></div>
+	<div
+		bind:this={popoverRef}
+		style:left={popoverRefOffset.x + "px"}
+		style:top={popoverRefOffset.y + "px"}
+		class="popover-ref"
+		aria-hidden="true"
+	></div>
 	<FileSuggest bind:this={fileSuggest} positionEl={popoverRef} />
 </div>
 

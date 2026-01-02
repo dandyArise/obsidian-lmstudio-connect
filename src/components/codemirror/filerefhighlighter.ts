@@ -9,7 +9,7 @@ import { RangeSetBuilder } from "@codemirror/state";
 
 const highlightMark = Decoration.mark({ class: "cm-note-ref-highlight" });
 
-export const highlightPlugin = ViewPlugin.fromClass(
+export const fileRefHighlighter = ViewPlugin.fromClass(
 	class {
 		decorations: DecorationSet;
 		referenceBracketRegEx = /\[\[(\s*[^\]]*)/g; //matches anything after [[ until ]
