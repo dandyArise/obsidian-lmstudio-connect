@@ -17,6 +17,7 @@
 	import ChatInputDeluxe from "./ChatInputDeluxe.svelte";
 
 	let { plugin }: { plugin: LMStudioConnectPlugin } = $props();
+	// svelte-ignore state_referenced_locally
 	setPluginContext(plugin);
 
 	let server = $derived(currentServer(plugin.settings));
@@ -33,7 +34,8 @@
 	let messages: ChatMessage[] = $state([]);
 	let bufferHeight = $state(0);
 	let errorMessage = $state("");
-	let messagesContainer: HTMLUListElement;
+	// svelte-ignore non_reactive_update
+let messagesContainer: HTMLUListElement;
 	let input: ChatInputDeluxe;
 
 	const gap = 20;

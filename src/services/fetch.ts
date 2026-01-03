@@ -37,9 +37,6 @@ function toObsidianRequestParams(url: RequestInfo | URL, init?: RequestInit): Re
 }
 
 export const customFetch = async (input: string, init?: RequestInit): Promise<Response> => {
-	console.log("Intercepting request to URL:", input);
-	console.log("Request options:", JSON.stringify(init, null, 2));
-
 	const response: RequestUrlResponse = await requestUrl(toObsidianRequestParams(input, init));
 	const fetchResp = new Response(
 		response.arrayBuffer,

@@ -63,20 +63,30 @@
 		};
 		fileSuggest.open("", true);
 	}
-
+	
+	// insert file widget based on cursor position
 	function onFileSelected(file: TFile) {
 		const cursorFileRef = editor.state.field(cursorWithinFileRef);
-		
-		if (cursorFileRef) {
-			const { from, to } = cursorFileRef;
-			let changes = editor.state.sliceDoc(to, to+1) === ']' ? [] : [{ from: to, insert: ']'}];	
+	
+		if (!cursorFileRef) {
+			const cursorPos = editor.state.selection.main.head;
 			editor.dispatch({
-			 	changes,
-				effects: [addFileReference.of({ from, to: to+1, file })],
+				changes: [{ from: cursorPos, insert: '0 '}],
+				effects: [addFileReference.of({ from: cursorPos, to: cursorPos+1, file })],
+				selection: {anchor: cursorPos + 2}
 			});
+			editor.focus();
+			return;
 		}
 
+		//TODO: may need to replace 0 with something I can regex match out with context or prompt;
+		const { from, to } = cursorFileRef;
+		editor.dispatch({
+			changes: [{from, to, insert: '0 '}],
+			effects: [addFileReference.of({ from, to: from+1, file })],
+		});
 	}
+
 	onMount(() => {
 		editor = new EditorView({
 			doc: "",

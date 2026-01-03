@@ -21,6 +21,7 @@
 		onSubmit: (result: ServerConnection[]) => void;
 	} = $props();
 
+	// svelte-ignore state_referenced_locally
 	let servers: ServerConnection[] = $state(
 		$state.snapshot(settings.servers).map((s) => {
 			return {
@@ -102,7 +103,7 @@
 			const resp = await requestUrl(server.url + MODELS_ENDPOINT);
 			ok = resp.status == 200 ? true : false; //might return 200 when not ok tho.
 		} catch (e) {
-			console.log(e);
+			console.error(e);
 		}
 		
 		showCORStip = showCORStip || !ok;

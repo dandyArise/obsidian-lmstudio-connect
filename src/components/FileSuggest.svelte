@@ -12,18 +12,19 @@
 	let selectedIndex = $state(0);
 	let q: string | undefined = $state();
 	let showInput = $state(false);
+	let value: string = $state('');
 
 	let popover: HTMLDivElement;
 	let inputBox: HTMLInputElement | undefined = $state();
 	let files: TFile[] = [];
 
-	let value: string = $state('');
 	function onkeydown(event: KeyboardEvent) {
 		if (event.key !== ']') {
 			dispatch(event);
-			if (event.defaultPrevented) return;
 		}
+	}
 
+	function oninput() {
 		update(value);
 	}
 
@@ -57,6 +58,18 @@
 		}
 		
 		update(query);
+	}
+
+	function getSuggestions(query: string) {
+		const q = query.toLowerCase();
+		return files
+			.filter((file) => file.name.toLowerCase().includes(q))
+			.slice(0,10)
+			.sort((a, b) => {
+				const aMatch = a.name.toLowerCase().indexOf(q);
+				const bMatch = b.name.toLowerCase().indexOf(q);
+				return aMatch - bMatch;
+			});
 	}
 
 	export function dispatch(e: KeyboardEvent) {
@@ -104,27 +117,23 @@
 		showInput = false;
 		suggestions = [];
 	}
-
-	function getSuggestions(query: string) {
-		const q = query.toLowerCase();
-		return files
-			.filter((file) => file.name.toLowerCase().includes(q))
-			.sort((a, b) => {
-				const aMatch = a.name.toLowerCase().indexOf(q);
-				const bMatch = b.name.toLowerCase().indexOf(q);
-				return aMatch - bMatch;
-			});
+	
+	function onclick(file: TFile) {
+		onFileSelected(file);
+		close();
 	}
 </script>
 
 <div bind:this={popover} class={["popover", isOpen && "visible"]}>
 	<div>
 		{#if showInput}
-			<input bind:this={inputBox} bind:value {onkeydown} type="text" placeholder="Enter a note name...">
+			<input bind:this={inputBox} bind:value {onkeydown} {oninput} type="text" placeholder="Enter a note name...">
 		{/if}
 		<ul>
 			{#each suggestions as file, i}
-				<li class:selected={i === selectedIndex}>{file.basename}</li>
+				<!-- svelte-ignore a11y_click_events_have_key_events -->
+				<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+				<li class:selected={i === selectedIndex} onclick={() => onclick(file)}>{file.basename}</li>
 			{:else}
 				<li class="selected">No match found</li>
 			{/each}
@@ -166,13 +175,14 @@
 		padding: var(--size-2-3) var(--size-4-3);
 		white-space: pre-wrap;
 	}
-	li.selected {
+	li.selected, li:hover {
 		background-color: var(--background-modifier-hover);
 	}
-	li.selected {
+	li.selected, li:hover {
 		cursor: var(--cursor);
 		padding: var(--size-2-3) var(--size-4-3);
 		white-space: pre-wrap;
 		border-radius: var(--radius-s);
 	}
+	
 </style>

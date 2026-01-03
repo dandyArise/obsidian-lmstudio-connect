@@ -59,7 +59,6 @@ export async function createSettings(persistence: PersistenceConfig) {
 			destroy = $effect.root(() => {
 				$effect(() => {
 					persistence.save(guardedSettings);
-					console.log('settings auto-saved');
 					untrack(() => {
 						Object.assign(settings, guardedSettings);
 					})

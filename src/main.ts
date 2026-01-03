@@ -7,8 +7,6 @@ export default class LMStudioConnectPlugin extends Plugin {
 	unloadSettings: () => void;
 	
 	async onload() {
-		console.log("onload LMStudioConnectPlugin");
-
 		const { settings, dispose } = await createSettings({
 			save: this.saveData.bind(this),
 			load: this.loadData.bind(this)
@@ -29,7 +27,6 @@ export default class LMStudioConnectPlugin extends Plugin {
 	}
 
 	async onunload() {
-		console.log("unload LMStudioConnectPlugin");
 		this.unloadSettings();
 	}
 
