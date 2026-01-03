@@ -1,6 +1,6 @@
 import { StateField } from "@codemirror/state"
 
-export interface FileRefMatch { fileRefName: string, position: number }
+export interface FileRefMatch { fileRefName: string, from: number, to: number, namePos: number }
 
 //a watcher extension to flag if the cursor is within a file ref tag [[]]
 export let cursorWithinFileRef = StateField.define<FileRefMatch | undefined>({
@@ -22,7 +22,13 @@ export let cursorWithinFileRef = StateField.define<FileRefMatch | undefined>({
 		});
 
 		if (hit) {
-			match = { fileRefName: hit[1], position: line.from + hit.index! + 2 }
+			const from = line.from + hit.index!;
+			match = { 
+				fileRefName: hit[1], 
+				from,
+				to: from + hit[0].length,
+				namePos: from + 2 
+			};
 		}
 
 		return match;

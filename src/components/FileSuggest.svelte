@@ -5,22 +5,29 @@
 	import { tick } from "svelte";
 
 	let plugin = getPluginContext();
-	let { positionEl } = $props();
+	let { positionEl, onFileSelected } = $props();
 
 	let isOpen: boolean = $state(false);
 	let suggestions: TFile[] = $state([]);
 	let selectedIndex = $state(0);
+	let q: string | undefined = $state();
+	let showInput = $state(false);
 
 	let popover: HTMLDivElement;
+	let inputBox: HTMLInputElement | undefined = $state();
 	let files: TFile[] = [];
-	
-	//TODO: is this slow with many files? could block editor..
-	export function open(query: string) {
-		if (!isOpen) {
-			isOpen = true;
-			files = plugin.app.vault.getMarkdownFiles();
+
+	let value: string = $state('');
+	function onkeydown(event: KeyboardEvent) {
+		if (event.key !== ']') {
+			dispatch(event);
+			if (event.defaultPrevented) return;
 		}
-		
+
+		update(value);
+	}
+
+	function update(query: string) {
 		selectedIndex = 0;
 		suggestions = getSuggestions(query);
 		//tick to ensure popover is measurable with stable contents
@@ -35,9 +42,66 @@
 			});
 		});
 	}
+	
+	//TODO: is this slow with many files? could block editor..
+	export function open(query: string, input: boolean = false) {
+		q = query;
+		showInput = input;
+		if (showInput) {
+			tick().then(() => inputBox?.focus());
+		}
+
+		if (!isOpen) {
+			isOpen = true;
+			files = plugin.app.vault.getMarkdownFiles();
+		}
+		
+		update(query);
+	}
+
+	export function dispatch(e: KeyboardEvent) {
+		if (!isOpen) return;
+
+		switch (e.key) {
+			case "Enter":
+				if (!e.shiftKey) {
+					e.preventDefault();
+					if (!suggestions.length) {
+						close();
+						return;
+					}
+					onFileSelected(suggestions[selectedIndex]);
+					close();
+				}
+				break;
+			case "]":
+				if (q && suggestions.length && suggestions[selectedIndex].basename === q) {
+					 //closing exact match also selects
+					e.preventDefault();
+					onFileSelected(suggestions[selectedIndex]);
+					close();
+				}
+				break;
+			case "Escape":
+				e.preventDefault();
+				close();
+				break;
+			case "ArrowUp":
+				e.preventDefault();
+				selectedIndex = selectedIndex-1 < 0 ? suggestions.length-1 : selectedIndex-1;
+				break;
+			case "ArrowDown":
+				e.preventDefault();
+				selectedIndex = selectedIndex+1 >= suggestions.length ? 0 : selectedIndex+1;
+				break;
+		}
+	}
 
 	export function close() {
 		isOpen = false;
+		q = undefined;
+		value = '';
+		showInput = false;
 		suggestions = [];
 	}
 
@@ -55,9 +119,14 @@
 
 <div bind:this={popover} class={["popover", isOpen && "visible"]}>
 	<div>
+		{#if showInput}
+			<input bind:this={inputBox} bind:value {onkeydown} type="text" placeholder="Enter a note name...">
+		{/if}
 		<ul>
-		{#each suggestions as file, i}
+			{#each suggestions as file, i}
 				<li class:selected={i === selectedIndex}>{file.basename}</li>
+			{:else}
+				<li class="selected">No match found</li>
 			{/each}
 		</ul>
 	</div>
@@ -72,7 +141,7 @@
 		top: 0;
 		left: 0;
 	}
-	
+
 	/* needs to use full obsidian body so it can stretch outside leaf */
 	.popover > div {
 		max-width: var(--popover-width);
@@ -92,7 +161,7 @@
 	li {
 		align-items: baseline;
 		display: flex;
-		justify-content: space-between; 
+		justify-content: space-between;
 		overflow-y: auto;
 		padding: var(--size-2-3) var(--size-4-3);
 		white-space: pre-wrap;

@@ -1,13 +1,18 @@
 <script lang="ts">
-	import { EditorView } from "codemirror";
-	import { placeholder, drawSelection, ViewUpdate } from "@codemirror/view";
-	import { closeBrackets } from "@codemirror/autocomplete";
+	import { EditorView, minimalSetup } from "codemirror";
+	import { placeholder, ViewUpdate } from "@codemirror/view";
 	import { icon } from "./Icon.svelte";
 	import ModelPicker from "./ModelPicker.svelte";
 	import { onDestroy, onMount } from "svelte";
 	import FileSuggest from "./FileSuggest.svelte";
 	import { fileRefHighlighter } from "./codemirror/filerefhighlighter";
 	import { cursorWithinFileRef } from "./codemirror/cursorwithinfileref";
+	import {
+		addFileReference,
+		fileReferenceField,
+	} from "./codemirror/filerefwidget";
+	import type { TFile } from "obsidian";
+	import { tooltip } from "./Tooltip.svelte";
 
 	let { onsend } = $props();
 
@@ -38,21 +43,48 @@
 	let canSend = $state(false);
 
 	function onkeydown(e: KeyboardEvent) {
+		fileSuggest.dispatch(e);
+		if (e.defaultPrevented) return;
+
 		if (e.key == "Enter" && !e.shiftKey) {
 			e.preventDefault();
 			onsend();
 		}
 	}
 
+	function addFileRef() {
+		popoverRef.innerText = "[]"; //simulate same size box as match text
+		const btn = chatbox.getElementsByClassName("addFileRef")[0];
+		const pos = btn.getBoundingClientRect();
+		const chatboxRect = chatbox.getBoundingClientRect();
+		popoverRefOffset = {
+			x: pos.left - chatboxRect.x,
+			y: pos.top - chatboxRect.y,
+		};
+		fileSuggest.open("", true);
+	}
+
+	function onFileSelected(file: TFile) {
+		const cursorFileRef = editor.state.field(cursorWithinFileRef);
+		
+		if (cursorFileRef) {
+			const { from, to } = cursorFileRef;
+			let changes = editor.state.sliceDoc(to, to+1) === ']' ? [] : [{ from: to, insert: ']'}];	
+			editor.dispatch({
+			 	changes,
+				effects: [addFileReference.of({ from, to: to+1, file })],
+			});
+		}
+
+	}
 	onMount(() => {
 		editor = new EditorView({
 			doc: "",
 			extensions: [
-				drawSelection(),
 				placeholder("Send a message to the model..."),
-				closeBrackets(),
 				fileRefHighlighter,
 				cursorWithinFileRef,
+				fileReferenceField,
 				EditorView.lineWrapping,
 				EditorView.updateListener.of((v: ViewUpdate) => {
 					if (v.docChanged) {
@@ -62,9 +94,12 @@
 						const cursorInRef = v.state.field(cursorWithinFileRef);
 						if (cursorInRef) {
 							popoverRef.innerText = cursorInRef.fileRefName; //simulate same size box as match text
-							const pos = v.view.coordsAtPos(cursorInRef.position) || { left: 0, top: 0 };
+							const pos = v.view.coordsAtPos( cursorInRef.namePos,) || { left: 0, top: 0 };
 							const chatboxRect = chatbox.getBoundingClientRect();
-							popoverRefOffset = { x: pos.left - chatboxRect.x, y: pos.top - chatboxRect.y }
+							popoverRefOffset = {
+								x: pos.left - chatboxRect.x,
+								y: pos.top - chatboxRect.y,
+							};
 							fileSuggest.open(cursorInRef.fileRefName);
 						} else {
 							fileSuggest.close();
@@ -73,7 +108,9 @@
 				}),
 				EditorView.domEventHandlers({
 					keydown: (event) => onkeydown(event),
+					blur: () => fileSuggest.close() 
 				}),
+				minimalSetup,
 			],
 			parent: editorDiv,
 		});
@@ -87,12 +124,23 @@
 
 	<div class="toolbar">
 		<ModelPicker />
-		<button
-			onclick={onsend}
-			disabled={!canSend}
-			{@attach icon("arrow-up")}
-			title="send"
-		></button>
+		<div class="right">
+			<button
+				class="addFileRef"
+				onclick={addFileRef}
+				{@attach icon("brackets")}
+				{@attach tooltip("Add note reference")}
+				aria-label="Add note reference"
+			></button>
+			<button
+				class="send"
+				onclick={onsend}
+				disabled={!canSend}
+				{@attach icon("arrow-up")}
+				{@attach tooltip("Send")}
+				aria-label="send"
+			></button>
+		</div>
 	</div>
 
 	<!-- dynamically position over the search term so file suggest pops up nearby. -->
@@ -103,7 +151,11 @@
 		class="popover-ref"
 		aria-hidden="true"
 	></div>
-	<FileSuggest bind:this={fileSuggest} positionEl={popoverRef} />
+	<FileSuggest
+		bind:this={fileSuggest}
+		{onFileSelected}
+		positionEl={popoverRef}
+	/>
 </div>
 
 <style>
@@ -130,6 +182,11 @@
 		display: flex;
 		justify-content: space-between;
 		gap: var(--size-4-2);
+		align-items: center;
+	}
+	.toolbar .right {
+		display: flex;
+		gap: var(--size-2-2);
 		align-items: center;
 	}
 
@@ -169,25 +226,48 @@
 		background-color: var(--text-selection);
 	}
 
-	.editor :global(.cm-editor .cm-note-ref-highlight) {
+	.editor :global(.cm-editor .cm-unresolved-file-ref-highlight) {
 		color: var(--link-unresolved-color);
 	}
+	.editor :global(.cm-editor .cm-file-ref-widget) { 
+		display: inline-flex;
+		align-items: center;
+		background-color: var(--interactive-accent);
+		color: var(--text-on-accent);
+		padding: 0 var(--size-2-2);
+		border-radius: var(--radius-s);
+		gap: var(--size-2-2);
+	}
 
-	button {
+	.editor :global(.cm-editor .cm-file-ref-widget svg) {
+		width: var(--icon-xs);
+		height: var(--icon-xs);
+	}
+	button.addFileRef {
+		border-radius: 50%;
+		box-shadow: none;
+		padding: var(--size-2-2) var(--size-2-3);
+		background-color: transparent;
+	}
+	button.addFileRef:hover {
+		background-color: var(--interactive-hover);
+	}
+
+	button.send {
 		color: var(--text-on-accent);
 		border-radius: 50%;
 		box-shadow: none;
 		padding: var(--size-2-2) var(--size-2-3);
 	}
-	button:enabled {
+	button.send:enabled {
 		background-color: var(--interactive-accent);
 		transition: all var(--anim-duration-fast) ease-in-out;
 	}
-	button:hover {
+	button.send:hover {
 		background-color: var(--interactive-accent-hover);
 	}
-	button:disabled,
-	button:disabled:hover {
+	button.send:disabled,
+	button.send:disabled:hover {
 		background-color: var(--background-primary);
 		color: var(--text-muted);
 		opacity: 0.6;
