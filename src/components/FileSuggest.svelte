@@ -13,14 +13,14 @@
 	let selectedIndex = $state(0);
 	let q: string | undefined = $state();
 	let showInput = $state(false);
-	let value: string = $state('');
+	let value: string = $state("");
 
 	let popover: HTMLDivElement;
 	let inputBox: HTMLInputElement | undefined = $state();
 	let files: TFile[] = [];
 
 	function onkeydown(event: KeyboardEvent) {
-		if (event.key !== ']') {
+		if (event.key !== "]") {
 			dispatch(event);
 		}
 	}
@@ -47,7 +47,7 @@
 			});
 		});
 	}
-	
+
 	//TODO: is this slow with many files? could block editor..
 	export function open(query: string, input: boolean = false) {
 		q = query;
@@ -60,7 +60,7 @@
 			isOpen = true;
 			files = plugin.app.vault.getMarkdownFiles();
 		}
-		
+
 		update(query);
 	}
 
@@ -68,7 +68,7 @@
 		const q = query.toLowerCase();
 		return files
 			.filter((file) => file.name.toLowerCase().includes(q))
-			.slice(0,10)
+			.slice(0, 10)
 			.sort((a, b) => {
 				const aMatch = a.name.toLowerCase().indexOf(q);
 				const bMatch = b.name.toLowerCase().indexOf(q);
@@ -92,8 +92,12 @@
 				}
 				break;
 			case "]":
-				if (q && suggestions.length && suggestions[selectedIndex].basename === q) {
-					 //closing exact match also selects
+				if (
+					q &&
+					suggestions.length &&
+					suggestions[selectedIndex].basename === q
+				) {
+					//closing exact match also selects
 					e.preventDefault();
 					onFileSelected(suggestions[selectedIndex]);
 					close();
@@ -105,11 +109,17 @@
 				break;
 			case "ArrowUp":
 				e.preventDefault();
-				selectedIndex = selectedIndex-1 < 0 ? suggestions.length-1 : selectedIndex-1;
+				selectedIndex =
+					selectedIndex - 1 < 0
+						? suggestions.length - 1
+						: selectedIndex - 1;
 				break;
 			case "ArrowDown":
 				e.preventDefault();
-				selectedIndex = selectedIndex+1 >= suggestions.length ? 0 : selectedIndex+1;
+				selectedIndex =
+					selectedIndex + 1 >= suggestions.length
+						? 0
+						: selectedIndex + 1;
 				break;
 		}
 	}
@@ -117,27 +127,46 @@
 	export function close() {
 		isOpen = false;
 		q = undefined;
-		value = '';
+		value = "";
 		showInput = false;
 		suggestions = [];
 	}
-	
+
 	function onclick(file: TFile) {
 		onFileSelected(file);
 		close();
 	}
 </script>
 
-<div bind:this={popover} {@attach bodyMount()} class={["popover", isOpen && "visible"]}>
+<!-- svelte-ignore a11y_no_static_element_interactions -->
+<div
+	bind:this={popover}
+	onmousedown={(e) => e.preventDefault()}
+	{@attach bodyMount()}
+	class={["popover", isOpen && "visible"]}
+>
 	<div>
 		{#if showInput}
-			<input bind:this={inputBox} bind:value {onkeydown} {oninput} type="text" placeholder="Enter a note name...">
+			<input
+				bind:this={inputBox}
+				bind:value
+				{onkeydown}
+				{oninput}
+				onblur={close}
+				type="text"
+				placeholder="Enter a note name..."
+			/>
 		{/if}
 		<ul>
 			{#each suggestions as file, i}
 				<!-- svelte-ignore a11y_click_events_have_key_events -->
 				<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
-				<li class:selected={i === selectedIndex} onclick={() => onclick(file)}>{file.basename}</li>
+				<li
+					class:selected={i === selectedIndex}
+					onclick={() => onclick(file)}
+				>
+					{file.basename}
+				</li>
 			{:else}
 				<li class="selected">No match found</li>
 			{/each}
@@ -161,18 +190,29 @@
 		max-width: var(--popover-width);
 		max-height: var(--popover-max-height);
 		font-size: var(--popover-font-size);
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		padding: var(--size-2-3);
+		gap: var(--size-2-3);
 	}
 
 	.popover.visible {
 		display: flex;
 	}
 
+	input {
+		width: 100%;
+	}
+
 	ul {
 		margin: 0;
-		padding: var(--size-2-3);
+		padding: 0;
+		width: 100%;
 	}
 
 	li {
+		width: 100%;
 		align-items: baseline;
 		display: flex;
 		justify-content: space-between;
@@ -180,14 +220,15 @@
 		padding: var(--size-2-3) var(--size-4-3);
 		white-space: pre-wrap;
 	}
-	li.selected, li:hover {
+	li.selected,
+	li:hover {
 		background-color: var(--background-modifier-hover);
 	}
-	li.selected, li:hover {
+	li.selected,
+	li:hover {
 		cursor: var(--cursor);
 		padding: var(--size-2-3) var(--size-4-3);
 		white-space: pre-wrap;
 		border-radius: var(--radius-s);
 	}
-	
 </style>
