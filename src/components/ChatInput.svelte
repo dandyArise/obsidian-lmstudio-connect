@@ -13,11 +13,58 @@
 	} from "./codemirror/filerefwidget";
 	import type { TFile } from "obsidian";
 	import { tooltip } from "./Tooltip.svelte";
-	import { bodyMount } from "./BodyMount.svelte";
+	import type { Replacement } from "src/services/models";
+	import { getPluginContext } from "src/services/context";
 
 	let { onsend } = $props();
+	let plugin = getPluginContext();
 
-	export const text = () => editor.state.doc.toString();
+	export const text = async () => {
+		const text = editor.state.doc.toString();
+		const fileRefs = editor.state.field(fileReferenceField);
+		if (!fileRefs.size) {
+			return text;
+		}
+
+		//swap file ref markers for their actual note content
+		let replacements: Replacement[] = [];
+		for (let iter = fileRefs.iter(); iter.value; iter.next()) {
+			const fileContent = await plugin.app.vault.cachedRead(
+				iter.value.spec.file,
+			);
+			replacements.push({
+				from: iter.from,
+				to: iter.to,
+				value: fileContent,
+			});
+		}
+
+		return replaceByPosition(text, replacements);
+	};
+
+	export const contentHTML = () => {
+		const div = document.createElement("div");
+		div.className = editor.contentDOM.className;
+		div.innerHTML = editor.contentDOM.innerHTML;
+		const html = div.outerHTML;
+		div.remove();
+
+		return html;
+	};
+
+	function replaceByPosition(source: string, replacements: Replacement[]) {
+		let parts = [];
+		let cursor = 0;
+
+		for (const item of replacements) {
+			parts.push(source.slice(cursor, item.from));
+			parts.push(item.value);
+			cursor = item.to;
+		}
+
+		parts.push(source.slice(cursor));
+		return parts.join("");
+	}
 
 	export function set(value: string) {
 		const length = editor.state.doc.length;
@@ -49,7 +96,7 @@
 
 		if (e.key == "Enter" && !e.shiftKey) {
 			e.preventDefault();
-			onsend();
+			canSend && onsend();
 		}
 	}
 
@@ -111,7 +158,9 @@
 						const cursorInRef = v.state.field(cursorWithinFileRef);
 						if (cursorInRef) {
 							popoverRef.innerText = cursorInRef.fileRefName; //simulate same size box as match text
-							const pos = v.view.coordsAtPos(cursorInRef.namePos) || { left: 0, top: 0 };
+							const pos = v.view.coordsAtPos(
+								cursorInRef.namePos,
+							) || { left: 0, top: 0 };
 							const chatboxRect = chatbox.getBoundingClientRect();
 							popoverRefOffset = {
 								x: pos.left - chatboxRect.x,
@@ -244,7 +293,7 @@
 		color: var(--link-unresolved-color);
 	}
 
-	.editor :global(.cm-editor .cm-file-ref-widget) {
+	:global(.lmsc .cm-editor .cm-file-ref-widget) {
 		display: inline-flex;
 		align-items: center;
 		background-color: var(--interactive-accent);
@@ -254,14 +303,14 @@
 		gap: var(--size-2-2);
 	}
 
-	.editor :global(.cm-editor .cm-file-ref-widget > span) {
+	:global(.lmsc .cm-editor .cm-file-ref-widget > span) {
 		max-width: 100px;
 		overflow: hidden;
 		text-overflow: ellipsis;
 		white-space: nowrap;
 	}
-	
-	.editor :global(.cm-editor .cm-file-ref-widget svg) {
+
+	:global(.lmsc .cm-editor .cm-file-ref-widget svg) {
 		width: var(--icon-xs);
 		height: var(--icon-xs);
 	}

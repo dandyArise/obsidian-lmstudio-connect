@@ -28,7 +28,8 @@
 <li class={[ message.role, message.status ]} {@attach (node) => { node.scrollIntoView({ behavior: "smooth" }); }}>
 	<div in:fade bind:this={content}>
 		{#if message.role === Role.User}
-			{message.parts.join('')}	
+			{@html message.display}
+			<!-- {message.parts.join('')}	 -->
 		{:else} 
 			{#if message.status === Status.Pending}
 				<div class="loading" {@attach icon("loader")}></div>

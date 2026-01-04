@@ -15,7 +15,7 @@ export const fileReferenceField = StateField.define<DecorationSet>({
 		fileRefs = fileRefs.map(tr.changes)
 		for (let e of tr.effects) if (e.is(addFileReference)) {
 			fileRefs = fileRefs.update({
-				add: [fileReferenceWidget(e.value.file.basename).range(e.value.from, e.value.to)]
+				add: [fileReferenceWidget(e.value.file).range(e.value.from, e.value.to)]
 			})
 		}
 		return fileRefs;
@@ -28,7 +28,7 @@ export const fileReferenceField = StateField.define<DecorationSet>({
 	
 })
 
-const fileReferenceWidget = (fileName: string) => Decoration.replace({ widget: new FileReferenceWidget(fileName) });
+const fileReferenceWidget = (file: TFile) => Decoration.replace({ widget: new FileReferenceWidget(file.basename), file });
 
 class FileReferenceWidget extends WidgetType {
 	name: string;

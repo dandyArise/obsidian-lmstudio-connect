@@ -80,6 +80,7 @@
 		if (!isOpen) return;
 
 		switch (e.key) {
+			case "Tab":
 			case "Enter":
 				if (!e.shiftKey) {
 					e.preventDefault();

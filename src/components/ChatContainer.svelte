@@ -2,7 +2,7 @@
 	import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
 	import { streamText, type ModelMessage } from "ai";
 	import LMStudioConnectPlugin from "src/main";
-	import { Role, Status, type ChatMessage } from "src/services/models";
+	import { Role, Status, type ChatMessage, type InputValue } from "src/services/models";
 	import TopToolbar from "./TopToolbar.svelte";
 	import { tick } from "svelte";
 	import { setPluginContext } from "src/services/context";
@@ -14,7 +14,7 @@
 		toV1BaseURL,
 	} from "src/settings.svelte";
 	import ErrorMessage from "./ErrorMessage.svelte";
-	import ChatInputDeluxe from "./ChatInputDeluxe.svelte";
+	import ChatInput from "./ChatInput.svelte";
 
 	let { plugin }: { plugin: LMStudioConnectPlugin } = $props();
 	// svelte-ignore state_referenced_locally
@@ -30,14 +30,14 @@
 			baseURL,
 		}),
 	);
-	
+
 	let messages: ChatMessage[] = $state([]);
 	let bufferHeight = $state(0);
 	let errorMessage = $state("");
 	// svelte-ignore non_reactive_update
 	let messagesContainer: HTMLUListElement;
-	let input: ChatInputDeluxe;
-
+	let input: ChatInput;
+	let cachedInput: InputValue;
 	const gap = 20;
 
 	function toApiMessages(messages: ChatMessage[]): ModelMessage[] {
@@ -47,12 +47,22 @@
 		}));
 	}
 
-	async function send() {
+	async function onsend() {
+		const text = await input.text();
+		const html = input.contentHTML()
+		cachedInput = { text, display: html };
+		
+		await send(cachedInput);
+	}
+
+	async function send(message: InputValue) {
 		errorMessage = "";
+		
 		messages.push({
 			role: Role.User,
 			status: Status.Complete,
-			parts: [input.text()],
+			parts: [message.text],
+			display: message.display
 		});
 		messages.push({
 			role: Role.Assistant,
@@ -73,7 +83,10 @@
 
 		await tick();
 		const lastUserMessage = messagesContainer.children[messages.length - 2];
-		bufferHeight = messagesContainer.clientHeight - (lastUserMessage?.clientHeight ?? 0) - gap;
+		bufferHeight =
+			messagesContainer.clientHeight -
+			(lastUserMessage?.clientHeight ?? 0) -
+			gap;
 
 		const response = messages[messages.length - 1];
 		for await (const textPart of result.textStream) {
@@ -91,14 +104,12 @@
 
 	function resend() {
 		requestServerRefresh();
-		const lastUserMessage = messages.last()?.parts.first() || "";
-		input.set(lastUserMessage);
 		messages = messages.slice(0, -1);
-		send();
+		send(cachedInput);
 	}
 </script>
 
-<div class="container">
+<div class="lmsc container">
 	<TopToolbar onclear={clearMessages} />
 
 	{#if messages.length}
@@ -115,7 +126,7 @@
 		<EmptyView />
 	{/if}
 
-	<ChatInputDeluxe bind:this={input} onsend={send} />
+	<ChatInput bind:this={input} {onsend} />
 </div>
 
 <style>
