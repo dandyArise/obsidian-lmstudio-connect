@@ -41,10 +41,11 @@ class FileReferenceWidget extends WidgetType {
 	}
 	toDOM() {
 		let elt = document.createElement("span")
+		let textWrap = document.createElement("span");
+		textWrap.appendText(this.name);
 		elt.addClass("cm-file-ref-widget");
 		setIcon(elt, "sticky-note");	
-		elt.appendText(this.name);
-		// elt.textContent = this.name
+		elt.appendChild(textWrap);
 		return elt
 	}
 }

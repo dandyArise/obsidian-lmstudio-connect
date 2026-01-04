@@ -3,6 +3,7 @@
 	import { computePosition, flip, shift, offset } from "@floating-ui/dom";
 	import { getPluginContext } from "src/services/context";
 	import { tick } from "svelte";
+	import { bodyMount } from "./BodyMount.svelte";
 
 	let plugin = getPluginContext();
 	let { positionEl, onFileSelected } = $props();
@@ -32,6 +33,9 @@
 		selectedIndex = 0;
 		suggestions = getSuggestions(query);
 		//tick to ensure popover is measurable with stable contents
+		//NOTE: this doesn't adjust itself if user changes obsidian window size.
+		//shouldn't matter since user wont be doing that while using popover and hopefully
+		//a native obsidian popover can be used eventually.
 		tick().then(() => {
 			computePosition(positionEl, popover, {
 				middleware: [offset(6), flip(), shift({ padding: 5 })],
@@ -124,7 +128,7 @@
 	}
 </script>
 
-<div bind:this={popover} class={["popover", isOpen && "visible"]}>
+<div bind:this={popover} {@attach bodyMount()} class={["popover", isOpen && "visible"]}>
 	<div>
 		{#if showInput}
 			<input bind:this={inputBox} bind:value {onkeydown} {oninput} type="text" placeholder="Enter a note name...">
@@ -146,7 +150,8 @@
 	.popover {
 		display: none;
 		position: absolute;
-		width: max-content;
+		max-width: 500px;
+		max-height: 300px;
 		top: 0;
 		left: 0;
 	}

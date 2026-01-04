@@ -13,6 +13,7 @@
 	} from "./codemirror/filerefwidget";
 	import type { TFile } from "obsidian";
 	import { tooltip } from "./Tooltip.svelte";
+	import { bodyMount } from "./BodyMount.svelte";
 
 	let { onsend } = $props();
 
@@ -63,17 +64,23 @@
 		};
 		fileSuggest.open("", true);
 	}
-	
+
 	// insert file widget based on cursor position
 	function onFileSelected(file: TFile) {
 		const cursorFileRef = editor.state.field(cursorWithinFileRef);
-	
+
 		if (!cursorFileRef) {
 			const cursorPos = editor.state.selection.main.head;
 			editor.dispatch({
-				changes: [{ from: cursorPos, insert: '0 '}],
-				effects: [addFileReference.of({ from: cursorPos, to: cursorPos+1, file })],
-				selection: {anchor: cursorPos + 2}
+				changes: [{ from: cursorPos, insert: "0 " }],
+				effects: [
+					addFileReference.of({
+						from: cursorPos,
+						to: cursorPos + 1,
+						file,
+					}),
+				],
+				selection: { anchor: cursorPos + 2 },
 			});
 			editor.focus();
 			return;
@@ -82,8 +89,8 @@
 		//TODO: may need to replace 0 with something I can regex match out with context or prompt;
 		const { from, to } = cursorFileRef;
 		editor.dispatch({
-			changes: [{from, to, insert: '0 '}],
-			effects: [addFileReference.of({ from, to: from+1, file })],
+			changes: [{ from, to, insert: "0 " }],
+			effects: [addFileReference.of({ from, to: from + 1, file })],
 		});
 	}
 
@@ -104,7 +111,7 @@
 						const cursorInRef = v.state.field(cursorWithinFileRef);
 						if (cursorInRef) {
 							popoverRef.innerText = cursorInRef.fileRefName; //simulate same size box as match text
-							const pos = v.view.coordsAtPos( cursorInRef.namePos,) || { left: 0, top: 0 };
+							const pos = v.view.coordsAtPos(cursorInRef.namePos) || { left: 0, top: 0 };
 							const chatboxRect = chatbox.getBoundingClientRect();
 							popoverRefOffset = {
 								x: pos.left - chatboxRect.x,
@@ -118,7 +125,7 @@
 				}),
 				EditorView.domEventHandlers({
 					keydown: (event) => onkeydown(event),
-					blur: () => fileSuggest.close() 
+					blur: () => fileSuggest.close(),
 				}),
 				minimalSetup,
 			],
@@ -161,12 +168,9 @@
 		class="popover-ref"
 		aria-hidden="true"
 	></div>
-	<FileSuggest
-		bind:this={fileSuggest}
-		{onFileSelected}
-		positionEl={popoverRef}
-	/>
 </div>
+
+<FileSuggest bind:this={fileSuggest} {onFileSelected} positionEl={popoverRef} />
 
 <style>
 	.chatbox {
@@ -239,7 +243,8 @@
 	.editor :global(.cm-editor .cm-unresolved-file-ref-highlight) {
 		color: var(--link-unresolved-color);
 	}
-	.editor :global(.cm-editor .cm-file-ref-widget) { 
+
+	.editor :global(.cm-editor .cm-file-ref-widget) {
 		display: inline-flex;
 		align-items: center;
 		background-color: var(--interactive-accent);
@@ -249,6 +254,13 @@
 		gap: var(--size-2-2);
 	}
 
+	.editor :global(.cm-editor .cm-file-ref-widget > span) {
+		max-width: 100px;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+	
 	.editor :global(.cm-editor .cm-file-ref-widget svg) {
 		width: var(--icon-xs);
 		height: var(--icon-xs);

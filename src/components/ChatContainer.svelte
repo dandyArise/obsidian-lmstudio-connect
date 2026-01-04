@@ -35,7 +35,7 @@
 	let bufferHeight = $state(0);
 	let errorMessage = $state("");
 	// svelte-ignore non_reactive_update
-let messagesContainer: HTMLUListElement;
+	let messagesContainer: HTMLUListElement;
 	let input: ChatInputDeluxe;
 
 	const gap = 20;
