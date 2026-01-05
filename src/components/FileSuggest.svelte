@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { TFile } from "obsidian";
-	import { computePosition, flip, shift, offset } from "@floating-ui/dom";
+	import { computePosition, flip, shift, offset, autoUpdate } from "@floating-ui/dom";
 	import { getPluginContext } from "src/services/context";
-	import { onMount, tick } from "svelte";
+	import { onDestroy, tick } from "svelte";
 	import { bodyMount } from "./BodyMount.svelte";
 
 	let plugin = getPluginContext();
@@ -20,6 +20,7 @@
 	let scrollDiv: HTMLDivElement;
 	let inputBox: HTMLInputElement | undefined = $state();
 	let files: TFile[] = [];
+	let autoUpdateCleanup: () => void | undefined;
 
 	function onkeydown(event: KeyboardEvent) {
 		if (event.key !== "]") {
@@ -28,32 +29,22 @@
 	}
 
 	function oninput() {
-		update(value, false);
+		update(value);
 	}
 
-	function update(query: string, adjustXPosition: boolean) {
+	function update(query: string) {
 		selectedIndex = 0;
 		suggestions = getSuggestions(query);
-
-		adjustPosition(adjustXPosition);
 	}
 
-	function adjustPosition(adjustX: boolean) {
-		//NOTE: this doesn't adjust itself if user changes obsidian window size.
-		//shouldn't matter since user wont be doing that while using popover and hopefully
-		//a native obsidian popover can be used eventually.
+	function adjustPosition() {
 		tick().then(() => {
 			computePosition(positionEl, popover, {
 				placement: 'top',
-				middleware: [offset(6), flip(), shift({ padding: 5 })],
+				middleware: [offset(6), flip(),  shift({ padding: 5 })],
 			}).then(({ x, y }) => {
-				if (adjustX) {
-					Object.assign(popover.style, {
-						left: `${x}px`,
-					});
-					sessionWidth = scrollDiv.clientWidth;
-				}
 				Object.assign(popover.style, {
+					left: `${x}px`,
 					top: `${y}px`,
 				});
 			});
@@ -63,7 +54,6 @@
 	export function open(query: string, input: boolean = false) {
 		q = query;
 		showInput = input;
-		let adjustXPosition = false;
 
 		if (showInput) {
 			tick().then(() => inputBox?.focus());
@@ -71,12 +61,17 @@
 
 		if (!isOpen) {
 			isOpen = true;
-			adjustXPosition = true;
 			//TODO: check if this hangs UI in large vaults
 			files = plugin.app.vault.getMarkdownFiles();
+
+			autoUpdateCleanup = autoUpdate(
+			  positionEl,
+			  popover,
+			  adjustPosition
+			);	
 		}
 
-		update(query, adjustXPosition);
+		update(query);
 	}
 
 	function getSuggestions(query: string) {
@@ -155,8 +150,8 @@
 		value = "";
 		showInput = false;
 		suggestions = [];
-		sessionWidth = undefined;
 		scrollDiv.scrollTop = 0;
+		autoUpdateCleanup?.();
 	}
 
 	function onclick(file: TFile) {
@@ -164,20 +159,9 @@
 		close();
 	}
 
-	onMount(() => {
-		const adjustOnResize = () => { 
-			if (isOpen) {
-				console.log("resize");
-				adjustPosition(true);
-			}
-		}
-
-		console.log("visual viewport? ", window.visualViewport === null);
-
-		window.visualViewport?.addEventListener('resize', adjustOnResize);
-
-		return () => { window.visualViewport?.removeEventListener('resize', adjustOnResize) };
-	})
+	onDestroy(() => {
+		autoUpdateCleanup?.();
+	});
 </script>
 
 <!-- svelte-ignore a11y_no_static_element_interactions -->
@@ -227,10 +211,10 @@
 
 	/* needs to use full obsidian body so it can stretch outside leaf */
 	.popover > div {
-		max-width: var(--popover-width);
 		max-height: var(--popover-max-height);
 		font-size: var(--popover-font-size);
 		min-width: 200px;
+		width: var(--popover-width);
 		display: flex;
 		flex-direction: column;
 		align-items: center;

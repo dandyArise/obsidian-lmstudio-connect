@@ -157,7 +157,6 @@
 						// //trigger popup if cursor within markdown ref brackets
 						const cursorInRef = v.state.field(cursorWithinFileRef);
 						if (cursorInRef) {
-							popoverRef.innerText = cursorInRef.fileRefName; //simulate same size box as match text
 							const pos = v.view.coordsAtPos(
 								cursorInRef.namePos,
 							) || { left: 0, top: 0 };
