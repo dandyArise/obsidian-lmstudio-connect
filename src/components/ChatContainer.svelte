@@ -136,6 +136,7 @@
 		flex-direction: column;
 		overflow: hidden;
 		gap: var(--size-4-1);
+		padding-bottom: var(--size-4-1);
 	}
 
 	ul {

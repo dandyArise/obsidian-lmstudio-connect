@@ -2,7 +2,7 @@
 	import { TFile } from "obsidian";
 	import { computePosition, flip, shift, offset } from "@floating-ui/dom";
 	import { getPluginContext } from "src/services/context";
-	import { tick } from "svelte";
+	import { onMount, tick } from "svelte";
 	import { bodyMount } from "./BodyMount.svelte";
 
 	let plugin = getPluginContext();
@@ -35,6 +35,10 @@
 		selectedIndex = 0;
 		suggestions = getSuggestions(query);
 
+		adjustPosition(adjustXPosition);
+	}
+
+	function adjustPosition(adjustX: boolean) {
 		//NOTE: this doesn't adjust itself if user changes obsidian window size.
 		//shouldn't matter since user wont be doing that while using popover and hopefully
 		//a native obsidian popover can be used eventually.
@@ -43,7 +47,7 @@
 				placement: 'top',
 				middleware: [offset(6), flip(), shift({ padding: 5 })],
 			}).then(({ x, y }) => {
-				if (adjustXPosition) {
+				if (adjustX) {
 					Object.assign(popover.style, {
 						left: `${x}px`,
 					});
@@ -159,6 +163,18 @@
 		onFileSelected(file);
 		close();
 	}
+
+	onMount(() => {
+		const adjustOnResize = () => { 
+			if (isOpen) {
+				adjustPosition(true);
+			}
+		}
+
+		window.visualViewport?.addEventListener('resize', adjustOnResize);
+
+		return () => { window.visualViewport?.removeEventListener('resize', adjustOnResize) };
+	})
 </script>
 
 <!-- svelte-ignore a11y_no_static_element_interactions -->
