@@ -19,7 +19,11 @@ export class ChatView extends ItemView {
 	}
 
 	getDisplayText() {
-		return 'Chat view';
+		return 'LM Studio Connect';
+	}
+
+	getIcon(): string {
+	    return 'bot-message-square';
 	}
 
 	async onOpen() {

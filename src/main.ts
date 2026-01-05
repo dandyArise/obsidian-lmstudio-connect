@@ -21,7 +21,7 @@ export default class LMStudioConnectPlugin extends Plugin {
 			(leaf) => new ChatView(leaf, this)
 		);
 
-		this.addRibbonIcon('bot-message-square', 'LMStudio Chat', () => {
+		this.addRibbonIcon('bot-message-square', 'Open LM Studio Connect', () => {
 			this.activateView()
 		});
 	}

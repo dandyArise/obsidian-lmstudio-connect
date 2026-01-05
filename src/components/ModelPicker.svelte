@@ -103,9 +103,7 @@
 
 {#snippet modelOptions(server: LMStudioServer, models: ModelInfo[])}
 	{#each models as model}
-		<option
-			value={JSON.stringify({ server: server.name, model: model.id })}
-		>
+		<option value={JSON.stringify({ server: server.name, model: model.id })}>
 			{model.id}
 		</option>
 	{/each}
@@ -122,20 +120,11 @@
 	{:else}
 		{@const multiserver = modelsByServer.length > 1}
 		<div class="custom-dropdown">
-			<button onclick={() => select?.showPicker()}>
-				<div class="text">
-					<span>{getCurrentModelName(settings)}</span>
-				</div>
-				<span class="icon" {@attach icon("chevrons-up-down")}></span>
-			</button>
 			<select bind:this={select} bind:value {onchange}>
 				{#each modelsByServer as { server, connected, models }}
 					{#if multiserver}
-						<optgroup
-							label={server.name +
-								(!connected ? " (disconnected)" : "")}
-							disabled={!connected}
-						>
+						<optgroup label={server.name + (!connected ? " (disconnected)" : "")}
+							disabled={!connected}>
 							{@render modelOptions(server, models)}
 						</optgroup>
 					{:else}
@@ -143,6 +132,12 @@
 					{/if}
 				{/each}
 			</select>
+			<button onclick={() => select?.showPicker()}>
+				<div class="text">
+					<span>{getCurrentModelName(settings)}</span>
+				</div>
+				<span class="icon" {@attach icon("chevrons-up-down")}></span>
+			</button>
 		</div>
 	{/if}
 {:catch}
@@ -152,14 +147,10 @@
 <style>
 	.custom-dropdown {
 		display: flex;
-		position: relative;
 		flex: 1;
 	}
 
 	.custom-dropdown button {
-		position: absolute;
-		top: 0;
-		left: 0;
 		display: flex;
 		gap: var(--size-4-1);
 		max-width: 100%;
@@ -190,16 +181,14 @@
 		visibility: hidden;
 		appearance: none;
 		padding: unset;
-		height: 0;
-		height: unset;
-		padding: var(--size-4-2);
+		height:  1px;
 		background: var(--interactive-normal);
 		box-shadow: none;
 		border: var(--border-width) solid var(--color-black);
 		overflow: hidden;
 		text-overflow: ellipsis;
 		white-space: nowrap;
-		max-width: 110px;
+		width:1px;
 	}
 
 	select:hover {

@@ -260,7 +260,7 @@
 		resize: none;
 		border: none;
 		background: transparent;
-		padding: var(--size-2-2) 0;
+		padding: var(--size-4-1) 0;
 	}
 	.editor:focus,
 	.editor:active {
@@ -293,7 +293,7 @@
 		color: var(--link-unresolved-color);
 	}
 
-	:global(.lmsc .cm-editor .cm-file-ref-widget) {
+	:global(.lmsc .cm-content .cm-file-ref-widget) {
 		display: inline-flex;
 		align-items: center;
 		background-color: var(--interactive-accent);
@@ -303,17 +303,22 @@
 		gap: var(--size-2-2);
 	}
 
-	:global(.lmsc .cm-editor .cm-file-ref-widget > span) {
+	:global(.lmsc .cm-content .cm-file-ref-widget > span) {
 		max-width: 100px;
 		overflow: hidden;
 		text-overflow: ellipsis;
 		white-space: nowrap;
 	}
 
-	:global(.lmsc .cm-editor .cm-file-ref-widget svg) {
+	:global(.lmsc .cm-content .cm-file-ref-widget svg) {
 		width: var(--icon-xs);
 		height: var(--icon-xs);
 	}
+
+	.right button {
+		aspect-ratio: 1;
+	}
+
 	button.addFileRef {
 		border-radius: 50%;
 		box-shadow: none;
