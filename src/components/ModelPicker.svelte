@@ -184,7 +184,6 @@
 	}
 
 	select {
-		visibility: hidden;
 		appearance: none;
 		padding: unset;
 		height:  1px;
