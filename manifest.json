@@ -1,7 +1,7 @@
 {
 	"id": "lmsc-plugin",
 	"name": "LM Studio Connect",
-	"version": "0.1.4",
+	"version": "0.1.5",
 	"minAppVersion": "0.15.0",
 	"description": "An AI Chat interface to a local LM Studio instance.",
 	"author": "Joe Petrakovich",

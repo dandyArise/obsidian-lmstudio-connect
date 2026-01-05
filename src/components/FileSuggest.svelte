@@ -39,6 +39,7 @@
 
 	function adjustPosition() {
 		tick().then(() => {
+			sessionWidth = Math.max(sessionWidth ?? 0, popover.clientWidth);
 			computePosition(positionEl, popover, {
 				placement: 'top',
 				middleware: [offset(6), flip(),  shift({ padding: 5 })],
@@ -151,6 +152,7 @@
 		showInput = false;
 		suggestions = [];
 		scrollDiv.scrollTop = 0;
+		sessionWidth = undefined;
 		autoUpdateCleanup?.();
 	}
 
@@ -171,7 +173,7 @@
 	{@attach bodyMount()}
 	class={["popover", isOpen && "visible"]}
 >
-	<div bind:this={scrollDiv} style:width={sessionWidth && `${sessionWidth}px`}>
+	<div bind:this={scrollDiv} style:min-width={sessionWidth && `${sessionWidth}px`}>
 		{#if showInput}
 			<input
 				bind:this={inputBox}
@@ -211,10 +213,10 @@
 
 	/* needs to use full obsidian body so it can stretch outside leaf */
 	.popover > div {
+		max-width: var(--popover-width);
 		max-height: var(--popover-max-height);
 		font-size: var(--popover-font-size);
 		min-width: 200px;
-		width: var(--popover-width);
 		display: flex;
 		flex-direction: column;
 		align-items: center;
