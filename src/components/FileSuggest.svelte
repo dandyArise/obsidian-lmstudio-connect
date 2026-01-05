@@ -57,7 +57,9 @@
 		showInput = input;
 
 		if (showInput) {
-			tick().then(() => inputBox?.focus());
+			tick().then(() => { 
+				inputBox?.focus()
+			});
 		}
 
 		if (!isOpen) {

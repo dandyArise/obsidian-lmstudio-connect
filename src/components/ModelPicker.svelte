@@ -132,7 +132,13 @@
 					{/if}
 				{/each}
 			</select>
-			<button onclick={() => select?.showPicker()}>
+			<button onclick={() => {
+				if (select?.showPicker) {
+					select.showPicker();
+				} else {
+					select?.focus();
+				}
+			}}>
 				<div class="text">
 					<span>{getCurrentModelName(settings)}</span>
 				</div>
