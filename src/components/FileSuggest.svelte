@@ -167,9 +167,12 @@
 	onMount(() => {
 		const adjustOnResize = () => { 
 			if (isOpen) {
+				console.log("resize");
 				adjustPosition(true);
 			}
 		}
+
+		console.log("visual viewport? ", window.visualViewport === null);
 
 		window.visualViewport?.addEventListener('resize', adjustOnResize);
 
@@ -217,6 +220,7 @@
 		position: absolute;
 		max-width: 500px;
 		max-height: 300px;
+		z-index: var(--layer-popover);
 		top: 0;
 		left: 0;
 	}
