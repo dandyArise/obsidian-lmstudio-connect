@@ -5,7 +5,7 @@ import { SettingsTab, type PluginSettings, createSettings, PLUGIN_NAME } from '.
 export default class LMStudioConnectPlugin extends Plugin {
 	settings: PluginSettings;
 	unloadSettings: () => void;
-	
+
 	async onload() {
 		const { settings, dispose } = await createSettings({
 			save: this.saveData.bind(this),
@@ -23,6 +23,14 @@ export default class LMStudioConnectPlugin extends Plugin {
 
 		this.addRibbonIcon('bot-message-square', `Open ${PLUGIN_NAME}`, () => {
 			void this.activateView()
+		});
+
+		this.addCommand({
+			id: 'open-chat-view',
+			name: 'Open chat view',
+			callback: () => {
+				void this.activateView();
+			},
 		});
 	}
 
@@ -42,7 +50,7 @@ export default class LMStudioConnectPlugin extends Plugin {
 			leaf = workspace.getRightLeaf(false);
 			await leaf?.setViewState({ type: VIEW_TYPE_CHAT, active: true });
 		}
-		
+
 		if (!leaf) {
 			console.error("Unexpected error loading leaf.  Try reopening the plugin.");
 			return;
