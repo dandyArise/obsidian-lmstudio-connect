@@ -29,13 +29,13 @@
 		//swap file ref markers for their actual note content
 		let replacements: Replacement[] = [];
 		for (let iter = fileRefs.iter(); iter.value; iter.next()) {
-			const fileContent = await plugin.app.vault.cachedRead(
-				iter.value.spec.file,
-			);
+			const file: TFile = iter.value.spec.file;
+			const fileContent = await plugin.app.vault.cachedRead(file);
+			const inserted = `[begin obsidian note: ${file.name}] ${fileContent} [/end obsidian note]`;
 			replacements.push({
 				from: iter.from,
 				to: iter.to,
-				value: fileContent,
+				value: inserted,
 			});
 		}
 
