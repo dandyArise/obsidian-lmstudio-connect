@@ -27,14 +27,14 @@ const DEFAULT_SETTINGS: Partial<PluginSettings> = {
 export const serverRefreshRequest = $state({ watch: 0 });
 export function requestServerRefresh() { serverRefreshRequest.watch += 1; }
 
-type PersistenceConfig = { save: (data: any) => Promise<void>, load: () => Promise<any> };
+type PersistenceConfig = { save: (data: PluginSettings) => Promise<void>, load: () => Promise<PluginSettings> };
 
 // Creates settings that auto-persist when modified using a provided save function.
 export async function createSettings(persistence: PersistenceConfig) {
 	let settings: PluginSettings = $state(Object.assign(DEFAULT_SETTINGS));
 	// ensure proper url format and that default server isn't removed
-	let guardedSettings: PluginSettings = $derived.by(() => {
-		let saved = Object.assign({}, settings);
+	const guardedSettings: PluginSettings = $derived.by(() => {
+		const saved = Object.assign({}, settings);
 
 		const defaultServer = saved.servers.find(s => s.name === 'default');
 		if (defaultServer) {
@@ -84,7 +84,7 @@ export class SettingsTab extends PluginSettingTab {
 	}
 
 	display(): void {
-		let { containerEl } = this;
+		const { containerEl } = this;
 
 		containerEl.empty();
 

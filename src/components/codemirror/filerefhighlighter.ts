@@ -20,9 +20,11 @@ export const fileRefHighlighter = ViewPlugin.fromClass(
 			this.referenceBracketRegEx.lastIndex = 0;
 			for (let cursor = view.state.doc.iterRange(from, to), pos = from, m; !cursor.next().done; pos += cursor.value.length) {
 				if (!cursor.lineBreak) {
-					while (m = this.referenceBracketRegEx.exec(cursor.value)) {
+					m = this.referenceBracketRegEx.exec(cursor.value);
+					while (m) {
 						const start = pos + m.index + 2; //skip the [[
 						builder.add(start, start + m[1].length, highlightMark);
+						m = this.referenceBracketRegEx.exec(cursor.value);
 					}
 				}
 			}
@@ -48,11 +50,11 @@ export const fileRefHighlighter = ViewPlugin.fromClass(
 					changeFrom = Math.min(from, changeFrom);
 					changeTo = Math.max(to, changeTo);
 				});
-				let start = update.view.state.doc.lineAt(changeFrom).from;
-				let end = update.view.state.doc.lineAt(changeTo).to;
+				const start = update.view.state.doc.lineAt(changeFrom).from;
+				const end = update.view.state.doc.lineAt(changeTo).to;
 				
 				const recreated = this.getMatches(update.view, start, end);
-				let ranges: Range<Decoration>[] = [];
+				const ranges: Range<Decoration>[] = [];
 				for (let cursor = recreated.iter(); cursor.value; cursor.next()) {
 					ranges.push(cursor.value.range(cursor.from, cursor.to));
 				}

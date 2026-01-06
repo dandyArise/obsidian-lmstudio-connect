@@ -13,7 +13,7 @@ export interface Replacement {
 	to: number;
 	value: string;
 }
-export interface InputValue { text: string, display: string };
+export interface InputValue { text: string, display: string }
 
 export enum Role { Assistant = "assistant", User = "user" }
 export enum Status { Pending = "pending", Streaming = "streaming", Complete = "complete" }

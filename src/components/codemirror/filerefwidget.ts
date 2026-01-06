@@ -13,7 +13,7 @@ export const fileReferenceField = StateField.define<DecorationSet>({
 
 	update(fileRefs, tr) {
 		fileRefs = fileRefs.map(tr.changes)
-		for (let e of tr.effects) if (e.is(addFileReference)) {
+		for (const e of tr.effects) if (e.is(addFileReference)) {
 			fileRefs = fileRefs.update({
 				add: [fileReferenceWidget(e.value.file).range(e.value.from, e.value.to)]
 			})
@@ -40,8 +40,8 @@ class FileReferenceWidget extends WidgetType {
 		return this.name == other.name
 	}
 	toDOM() {
-		let elt = document.createElement("span")
-		let textWrap = document.createElement("span");
+		const elt = document.createElement("span")
+		const textWrap = document.createElement("span");
 		textWrap.appendText(this.name);
 		elt.addClass("cm-file-ref-widget");
 		setIcon(elt, "sticky-note");	

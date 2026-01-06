@@ -8,4 +8,4 @@ export function bodyMount(): Attachment {
 			element.remove();
 		};
 	}
-};
+}

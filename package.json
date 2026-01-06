@@ -9,7 +9,11 @@
 		"version": "node version-bump.mjs && git add manifest.json versions.json",
 		"svelte-check": "svelte-check --tsconfig tsconfig.json"
 	},
-	"keywords": ["obsidian", "lmstudio", "plugin"],
+	"keywords": [
+		"obsidian",
+		"lmstudio",
+		"plugin"
+	],
 	"author": "Joe Petrakovich",
 	"license": "MIT",
 	"devDependencies": {
@@ -19,6 +23,7 @@
 		"builtin-modules": "3.3.0",
 		"esbuild": "0.17.3",
 		"esbuild-svelte": "^0.9.4",
+		"eslint": "^8.57.1",
 		"obsidian": "latest",
 		"svelte": "^5.45.10",
 		"svelte-check": "^4.3.4",

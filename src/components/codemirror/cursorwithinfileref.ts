@@ -3,7 +3,7 @@ import { StateField } from "@codemirror/state"
 export interface FileRefMatch { fileRefName: string, from: number, to: number, namePos: number }
 
 //a watcher extension to flag if the cursor is within a file ref tag [[]]
-export let cursorWithinFileRef = StateField.define<FileRefMatch | undefined>({
+export const cursorWithinFileRef = StateField.define<FileRefMatch | undefined>({
 	create() {
 		return undefined;
 	},
@@ -15,14 +15,16 @@ export let cursorWithinFileRef = StateField.define<FileRefMatch | undefined>({
 		const bracketRegEx = /\[\[(\s*[^\]]*)/g; //matches anything after [[ until ]
 		const matches = [...line.text.matchAll(bracketRegEx)];
 		const [hit] = matches.filter((m) => {
+			if (m.index === undefined) return false;
+
 			const groupSize = m[1].length;
-			const groupStart = line.from + m.index! + 2; //don't count [[
+			const groupStart = line.from + m.index + 2; //don't count [[
 			const groupEnd = 1 + groupStart + Math.max(0, groupSize - 1);
 			return cursor >= groupStart && cursor <= groupEnd;
 		});
 
-		if (hit) {
-			const from = line.from + hit.index!;
+		if (hit && hit.index !== undefined) {
+			const from = line.from + hit.index;
 			match = { 
 				fileRefName: hit[1], 
 				from,

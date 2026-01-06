@@ -23,7 +23,7 @@ export class ChatView extends ItemView {
 	}
 
 	getIcon(): string {
-	    return 'bot-message-square';
+		return 'bot-message-square';
 	}
 
 	async onOpen() {
