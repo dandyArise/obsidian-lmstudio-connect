@@ -2,6 +2,7 @@ import { ItemView, WorkspaceLeaf } from 'obsidian';
 import ChatContainer from './components/ChatContainer.svelte';
 import { mount, unmount } from 'svelte';
 import type LMStudioConnectPlugin from './main';
+import { PLUGIN_NAME } from './settings.svelte';
 
 export const VIEW_TYPE_CHAT = 'chat-view';
 
@@ -19,7 +20,7 @@ export class ChatView extends ItemView {
 	}
 
 	getDisplayText() {
-		return 'LM Studio Connect';
+		return PLUGIN_NAME;
 	}
 
 	getIcon(): string {
@@ -31,11 +32,12 @@ export class ChatView extends ItemView {
 			target: this.contentEl,
 			props: { plugin: this.plugin }
 		});
+		await Promise.resolve();
 	}
 
 	async onClose() {
 		if (this.chatContainer) {
-			unmount(this.chatContainer);
+			await unmount(this.chatContainer);
 		}
 	}
 }

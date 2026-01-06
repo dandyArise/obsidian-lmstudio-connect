@@ -15,6 +15,8 @@ export interface LMStudioServer {
 	lastUsedModel: string
 }
 
+export const LM_STUDIO_NAME = 'LM Studio';
+export const PLUGIN_NAME = `${LM_STUDIO_NAME} Connect`;
 export const MODELS_ENDPOINT = '/v1/models';
 export const toV1BaseURL = (url: string) => url + '/v1';
 export const currentServer = (settings: PluginSettings) => settings.servers.find(s => s.name === settings.lastUsedServer);
@@ -58,7 +60,7 @@ export async function createSettings(persistence: PersistenceConfig) {
 			settings = Object.assign({}, DEFAULT_SETTINGS, initial);
 			destroy = $effect.root(() => {
 				$effect(() => {
-					persistence.save(guardedSettings);
+					void persistence.save(guardedSettings);
 					untrack(() => {
 						Object.assign(settings, guardedSettings);
 					})
@@ -89,8 +91,8 @@ export class SettingsTab extends PluginSettingTab {
 		containerEl.empty();
 
 		new Setting(containerEl)
-			.setName('LM Studio Server')
-			.setDesc('Configure the connection to one or more LM Studio servers.')
+			.setName(`${LM_STUDIO_NAME} server`)
+			.setDesc('Configure the connection to one or more servers.')
 			.addButton(button => button
 				.setButtonText('Manage')
 				.onClick(() => {
@@ -128,7 +130,7 @@ export class LMStudioServerSettingsModal extends Modal {
 
 	constructor(app: App, settings: PluginSettings, onSubmit: (result: ServerConnection[]) => void) {
 		super(app);
-		this.setTitle('LM Studio Server');
+		this.setTitle(`${LM_STUDIO_NAME} server`);
 		this.settingsComponent = mount(ServerSettingsComponent, {
 			target: this.contentEl,
 			props: {
@@ -144,7 +146,7 @@ export class LMStudioServerSettingsModal extends Modal {
 
 	onClose() {
 		if (this.settingsComponent) {
-			unmount(this.settingsComponent);
+			void unmount(this.settingsComponent);
 		}
 	}
 }
