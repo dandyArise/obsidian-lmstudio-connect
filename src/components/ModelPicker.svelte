@@ -121,8 +121,9 @@
 		<div class="custom-dropdown">
 			<select bind:this={select} bind:value {onchange}>
 				{#each modelsByServer as { server, connected, models }}
+				{@const name = server.name === 'default' ? t('serverModal.default') : server.name}
 					{#if multiserver}
-						<optgroup label={server.name + (!connected ? ` (${t('serverModal.disconnected')})` : "")}
+						<optgroup label={name + (!connected ? ` (${t('serverModal.disconnected')})` : "")}
 							disabled={!connected}>
 							{@render modelOptions(server, models)}
 						</optgroup>

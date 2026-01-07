@@ -26,6 +26,7 @@
     "cancel": "Cancel",
     "delete": "Delete",
     "disconnected": "disconnected",
+	"default": "default",
     "uniqueNameError": "Please use a unique name."
   },
   "chat": {

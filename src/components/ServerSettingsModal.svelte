@@ -147,7 +147,9 @@
 	<div class={["servers", servers.length > 1 && "many"]}>
 		{#each servers as server}
 			<div class={["server", server.isDefault && "default"]}>
-				<span class="name">{server.name}</span>
+				<span class="name">
+					{server.isDefault ? t('serverModal.default') : server.name}
+				</span>
 				<div>
 					{#if server.status === "pending"}
 						<button
