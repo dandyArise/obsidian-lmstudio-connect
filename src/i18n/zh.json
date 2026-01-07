@@ -1,0 +1,53 @@
+{
+  "plugin": {
+    "name": "LM Studio Connect",
+    "openCommand": "打开 {{name}}"
+  },
+  "commands": {
+    "openChatView": "打开聊天视图"
+  },
+  "settings": {
+    "serverName": "{{name}} 服务器",
+    "serverDescription": "配置到一个或多个服务器的连接。",
+    "manage": "管理"
+  },
+  "serverModal": {
+    "instructions": "覆盖默认服务器 URL 或在下方添加其他服务器。",
+    "corsTip": "请确保服务器正在运行且 <em>CORS 选项</em> 已启用。",
+    "serverConnected": "在此 URL 检测到 LM Studio。",
+    "serverDisconnected": "未找到 LM Studio。服务器是否正在运行并启用了 CORS？",
+    "urlPlaceholder": "示例：http://0.0.0.0:1",
+    "server": "服务器",
+    "displayNamePlaceholder": "显示名称",
+    "urlInputPlaceholder": "URL",
+    "add": "添加",
+    "addAdditionalServers": "添加其他服务器",
+    "save": "保存",
+    "cancel": "取消",
+    "delete": "删除",
+    "disconnected": "已断开",
+    "default": "默认",
+    "uniqueNameError": "请使用唯一的名称。"
+  },
+  "chat": {
+    "placeholder": "向模型发送消息...",
+    "send": "发送",
+    "addNoteReference": "添加笔记引用",
+    "clearChat": "清除聊天",
+    "retry": "重试"
+  },
+  "modelPicker": {
+    "chooseModel": "选择模型...",
+    "noModelsFound": "未找到模型",
+    "connecting": "正在连接...",
+    "lookingForServer": "正在查找 LM Studio...",
+    "verifySettings": "请验证插件设置中的基本 URL，并确保 LM Studio 服务器正在运行且 CORS 已启用。"
+  },
+  "fileSuggest": {
+    "placeholder": "输入笔记名称...",
+    "noMatch": "未找到匹配项"
+  },
+  "errors": {
+    "somethingWentWrong": "出错了。LM Studio 是否已连接？"
+  }
+}
