@@ -15,6 +15,7 @@
 	import { tooltip } from "./Tooltip.svelte";
 	import type { Replacement } from "src/services/models";
 	import { getPluginContext } from "src/services/context";
+	import { t } from "src/i18n";
 
 	let { onsend } = $props();
 	let plugin = getPluginContext();
@@ -145,7 +146,7 @@
 		editor = new EditorView({
 			doc: "",
 			extensions: [
-				placeholder("Send a message to the model..."),
+				placeholder(t('chat.placeholder')),
 				fileRefHighlighter,
 				cursorWithinFileRef,
 				fileReferenceField,
@@ -194,16 +195,16 @@
 				class="addFileRef"
 				onclick={addFileRef}
 				{@attach icon("brackets")}
-				{@attach tooltip("Add note reference")}
-				aria-label="Add note reference"
+				{@attach tooltip(t('chat.addNoteReference'))}
+				aria-label={t('chat.addNoteReference')}
 			></button>
 			<button
 				class="send"
 				onclick={onsend}
 				disabled={!canSend}
 				{@attach icon("arrow-up")}
-				{@attach tooltip("Send")}
-				aria-label="send"
+				{@attach tooltip(t('chat.send'))}
+				aria-label={t('chat.send')}
 			></button>
 		</div>
 	</div>

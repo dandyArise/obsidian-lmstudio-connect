@@ -3,6 +3,7 @@ import type LMStudioConnectPlugin from "./main";
 import ServerSettingsComponent from "./components/ServerSettingsModal.svelte";
 import { mount, unmount, untrack } from "svelte";
 import type { ServerConnection } from "./services/models";
+import { t } from "./i18n";
 
 export interface PluginSettings {
 	lastUsedServer: string;
@@ -91,10 +92,10 @@ export class SettingsTab extends PluginSettingTab {
 		containerEl.empty();
 
 		new Setting(containerEl)
-			.setName(`${LM_STUDIO_NAME} server`)
-			.setDesc('Configure the connection to one or more servers.')
+			.setName(t('settings.serverName', { name: LM_STUDIO_NAME }))
+			.setDesc(t('settings.serverDescription'))
 			.addButton(button => button
-				.setButtonText('Manage')
+				.setButtonText(t('settings.manage'))
 				.onClick(() => {
 					new LMStudioServerSettingsModal(
 						this.app,
@@ -130,7 +131,7 @@ export class LMStudioServerSettingsModal extends Modal {
 
 	constructor(app: App, settings: PluginSettings, onSubmit: (result: ServerConnection[]) => void) {
 		super(app);
-		this.setTitle(`${LM_STUDIO_NAME} server`);
+		this.setTitle(t('settings.serverName', { name: LM_STUDIO_NAME }));
 		this.settingsComponent = mount(ServerSettingsComponent, {
 			target: this.contentEl,
 			props: {

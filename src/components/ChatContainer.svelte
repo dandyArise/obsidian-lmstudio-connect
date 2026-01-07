@@ -15,6 +15,7 @@
 	} from "src/settings.svelte";
 	import ErrorMessage from "./ErrorMessage.svelte";
 	import ChatInput from "./ChatInput.svelte";
+	import { t } from "src/i18n";
 
 	let { plugin }: { plugin: LMStudioConnectPlugin } = $props();
 	// svelte-ignore state_referenced_locally
@@ -75,7 +76,7 @@
 			onError({ error }) {
 				console.error(error);
 				messages = messages.slice(0, -1);
-				errorMessage = "Something went wrong.  Is LM Studio connected?";
+				errorMessage = t('errors.somethingWentWrong');
 				requestServerRefresh();
 			},
 		});

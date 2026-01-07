@@ -4,6 +4,7 @@
 	import { getPluginContext } from "src/services/context";
 	import { onDestroy, tick } from "svelte";
 	import { bodyMount } from "./BodyMount.svelte";
+	import { t } from "src/i18n";
 
 	let plugin = getPluginContext();
 	let { positionEl, onFileSelected } = $props();
@@ -184,7 +185,7 @@
 				{oninput}
 				onblur={close}
 				type="text"
-				placeholder="Enter a note name..."
+				placeholder={t('fileSuggest.placeholder')}
 			/>
 		{/if}
 		<ul>
@@ -195,7 +196,7 @@
 					{file.basename}
 				</li>
 			{:else}
-				<li class="selected">No match found</li>
+				<li class="selected">{t('fileSuggest.noMatch')}</li>
 			{/each}
 		</ul>
 	</div>

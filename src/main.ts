@@ -1,6 +1,7 @@
 import { Plugin, WorkspaceLeaf } from 'obsidian';
 import { ChatView, VIEW_TYPE_CHAT } from './chatview';
 import { SettingsTab, type PluginSettings, createSettings, PLUGIN_NAME } from './settings.svelte';
+import { t } from './i18n';
 
 export default class LMStudioConnectPlugin extends Plugin {
 	settings: PluginSettings;
@@ -21,13 +22,13 @@ export default class LMStudioConnectPlugin extends Plugin {
 			(leaf) => new ChatView(leaf, this)
 		);
 
-		this.addRibbonIcon('bot-message-square', `Open ${PLUGIN_NAME}`, () => {
+		this.addRibbonIcon('bot-message-square', t('plugin.openCommand', { name: PLUGIN_NAME }), () => {
 			void this.activateView()
 		});
 
 		this.addCommand({
 			id: 'open-chat-view',
-			name: 'Open chat view',
+			name: t('commands.openChatView'),
 			callback: () => {
 				void this.activateView();
 			},

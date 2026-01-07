@@ -10,6 +10,7 @@
 	import { tooltip } from "./Tooltip.svelte";
 	import { onDestroy, tick } from "svelte";
 	import type { ServerConnection } from "src/services/models";
+	import { t } from "src/i18n";
 
 	let {
 		settings,
@@ -59,7 +60,7 @@
 		}
 		
 		if (servers.some(s => s.name.toLowerCase() === additionalServerNameInput.value.toLowerCase())) {
-			additionalServerNameInput.setCustomValidity("Please use a unique name.");
+			additionalServerNameInput.setCustomValidity(t('serverModal.uniqueNameError'));
 		}
 	}
 	
@@ -136,9 +137,9 @@
 
 <div class={[addControlsVisible && "add-controls-visible"]}>
 	<div class="instructions">
-		Override the default server URL or add additional servers below.
+		{t('serverModal.instructions')}
 		{#if showCORStip}
-			<span class="tip">Make sure the server is running and the <em>CORS option</em> is enabled.</span>
+			<span class="tip">{@html t('serverModal.corsTip')}</span>
 		{/if}
 	</div>
 
@@ -160,8 +161,8 @@
 							onclick={() => healthcheck(server)}
 							{@attach tooltip(
 								server.status === "ok"
-									? "LM Studio is detected at this URL."
-									: "LM Studio not found.  Is the server running with CORS enabled?",
+									? t('serverModal.serverConnected')
+									: t('serverModal.serverDisconnected'),
 							)}
 							{@attach icon(
 								server.status === "ok"
@@ -181,21 +182,21 @@
 						size="22"
 						placeholder={server.isDefault
 							? DEFAULT_SERVER_URL
-							: "Example: http://0.0.0.0:1"}
+							: t('serverModal.urlPlaceholder')}
 					/>
 					<button
 						disabled={server.isDefault}
 						class="remove clickable-icon"
 						onclick={() => removeServer(server)}
 						{@attach icon("x")}
-						{@attach tooltip("Delete")}
+						{@attach tooltip(t('serverModal.delete'))}
 					></button>
 				</div>
 			</div>
 		{/each}
 
 		<div class="add-controls">
-			Server
+			{t('serverModal.server')}
 			<form bind:this={form} onsubmit={addServer}>
 				<input
 					type="text"
@@ -203,7 +204,7 @@
 					bind:value={additionalServerName}
 					size="15"
 					required
-					placeholder="Display Name"
+					placeholder={t('serverModal.displayNamePlaceholder')}
 				/>
 				<input
 					type="text"
@@ -211,23 +212,23 @@
 					bind:value={additionalServerURL}
 					size="22"
 					required
-					placeholder="URL"
+					placeholder={t('serverModal.urlInputPlaceholder')}
 				/>
-				<button onclick={addServer}>Add</button>
+				<button onclick={addServer}>{t('serverModal.add')}</button>
 			</form>
 		</div>
 	</div>
 
 	<div class="modal-buttons">
 		<button class="add-additional" onclick={showAddControls}>
-			Add additional servers
+			{t('serverModal.addAdditionalServers')}
 		</button>
 		<div>
 			<button
 				class="cta"
-				onclick={() => onSubmit($state.snapshot(servers))}>Save</button
+				onclick={() => onSubmit($state.snapshot(servers))}>{t('serverModal.save')}</button
 			>
-			<button onclick={onClose}>Cancel</button>
+			<button onclick={onClose}>{t('serverModal.cancel')}</button>
 		</div>
 	</div>
 </div>
@@ -236,7 +237,7 @@
 	.instructions {
 		padding-bottom: 2em;
 	}
-	.tip em {
+	.tip :global(em) {
 		color: var(--text-warning);
 		font-style: normal;
 	}

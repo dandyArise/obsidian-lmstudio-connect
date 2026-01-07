@@ -11,6 +11,7 @@
 	import type LMStudioConnectPlugin from "src/main";
 	import { tooltip } from "./Tooltip.svelte";
 	import { icon } from "./Icon.svelte";
+	import { t } from "src/i18n";
 
 	const plugin: LMStudioConnectPlugin = getPluginContext();
 	const settings: PluginSettings = plugin.settings;
@@ -71,7 +72,7 @@
 		);
 		return lastUsedServer?.lastUsedModel
 			? formatModelName(lastUsedServer.lastUsedModel)
-			: "Choose a model...";
+			: t('modelPicker.chooseModel');
 	}
 
 	let value: string | undefined = $state(toKey(settings));
@@ -92,12 +93,10 @@
 {#snippet error()}
 	<div
 		class="error"
-		{@attach tooltip(
-			"Verify base URL in plugin settings and ensure LM Studio server is running and CORS is enabled.",
-		)}
+		{@attach tooltip(t('modelPicker.verifySettings'))}
 	>
 		<span {@attach icon("circle-off")}></span>
-		No models found
+		{t('modelPicker.noModelsFound')}
 	</div>
 {/snippet}
 
@@ -110,9 +109,9 @@
 {/snippet}
 
 {#await listModelsFromAllServers()}
-	<div class="connecting" {@attach tooltip("Looking for LM Studio...")}>
+	<div class="connecting" {@attach tooltip(t('modelPicker.lookingForServer'))}>
 		<span {@attach icon("loader")}></span>
-		Connecting...
+		{t('modelPicker.connecting')}
 	</div>
 {:then modelsByServer}
 	{#if modelsByServer.every((s) => s.models.length === 0)}
@@ -123,7 +122,7 @@
 			<select bind:this={select} bind:value {onchange}>
 				{#each modelsByServer as { server, connected, models }}
 					{#if multiserver}
-						<optgroup label={server.name + (!connected ? " (disconnected)" : "")}
+						<optgroup label={server.name + (!connected ? ` (${t('serverModal.disconnected')})` : "")}
 							disabled={!connected}>
 							{@render modelOptions(server, models)}
 						</optgroup>

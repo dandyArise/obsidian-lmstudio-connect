@@ -1,0 +1,52 @@
+{
+  "plugin": {
+    "name": "LM Studio Connect",
+    "openCommand": "Open {{name}}"
+  },
+  "commands": {
+    "openChatView": "Open chat view"
+  },
+  "settings": {
+    "serverName": "{{name}} server",
+    "serverDescription": "Configure the connection to one or more servers.",
+    "manage": "Manage"
+  },
+  "serverModal": {
+    "instructions": "Override the default server URL or add additional servers below.",
+    "corsTip": "Make sure the server is running and the <em>CORS option</em> is enabled.",
+    "serverConnected": "LM Studio is detected at this URL.",
+    "serverDisconnected": "LM Studio not found.  Is the server running with CORS enabled?",
+    "urlPlaceholder": "Example: http://0.0.0.0:1",
+    "server": "Server",
+    "displayNamePlaceholder": "Display Name",
+    "urlInputPlaceholder": "URL",
+    "add": "Add",
+    "addAdditionalServers": "Add additional servers",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "disconnected": "disconnected",
+    "uniqueNameError": "Please use a unique name."
+  },
+  "chat": {
+    "placeholder": "Send a message to the model...",
+    "send": "Send",
+    "addNoteReference": "Add note reference",
+    "clearChat": "Clear chat",
+    "retry": "Retry"
+  },
+  "modelPicker": {
+    "chooseModel": "Choose a model...",
+    "noModelsFound": "No models found",
+    "connecting": "Connecting...",
+    "lookingForServer": "Looking for LM Studio...",
+    "verifySettings": "Verify base URL in plugin settings and ensure LM Studio server is running and CORS is enabled."
+  },
+  "fileSuggest": {
+    "placeholder": "Enter a note name...",
+    "noMatch": "No match found"
+  },
+  "errors": {
+    "somethingWentWrong": "Something went wrong.  Is LM Studio connected?"
+  }
+}

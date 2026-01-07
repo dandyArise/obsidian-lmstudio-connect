@@ -1,5 +1,6 @@
 <script>
 	import { icon } from "./Icon.svelte";
+	import { t } from "src/i18n";
 
 	let { message, onretry } = $props();
 </script>
@@ -7,7 +8,7 @@
 <li class="error">
 	{message}&nbsp;
 	<button onclick={onretry}>
-		Retry<span {@attach icon("rotate-ccw")}></span>
+		{t('chat.retry')}<span {@attach icon("rotate-ccw")}></span>
 	</button>
 </li>
 
