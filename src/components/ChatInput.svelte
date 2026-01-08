@@ -16,9 +16,15 @@
 	import type { Replacement } from "src/services/models";
 	import { getPluginContext } from "src/services/context";
 	import { t } from "src/i18n";
+	import { chatViewActive } from "src/settings.svelte";
 
 	let { onsend } = $props();
 	let plugin = getPluginContext();
+
+	$effect(() => { 
+		chatViewActive.watch;
+		editor?.focus();
+	});
 
 	export const text = async () => {
 		const text = editor.state.doc.toString();
@@ -336,6 +342,9 @@
 	}
 	button.addFileRef:hover {
 		background-color: var(--interactive-hover);
+	}
+	button.addFileRef:focus {
+		background-color: var(--background-modifier-border-focus);
 	}
 
 	button.send {

@@ -1,6 +1,6 @@
 import { Plugin, WorkspaceLeaf } from 'obsidian';
 import { ChatView, VIEW_TYPE_CHAT } from './chatview';
-import { SettingsTab, type PluginSettings, createSettings, PLUGIN_NAME } from './settings.svelte';
+import { SettingsTab, type PluginSettings, createSettings, PLUGIN_NAME, signalChatViewActive } from './settings.svelte';
 import { t } from './i18n';
 
 export default class LMStudioConnectPlugin extends Plugin {
@@ -33,6 +33,12 @@ export default class LMStudioConnectPlugin extends Plugin {
 				void this.activateView();
 			},
 		});
+
+		this.registerEvent(this.app.workspace.on('active-leaf-change', (leaf: WorkspaceLeaf | null) => {
+			if (leaf?.view instanceof ChatView) {
+				signalChatViewActive();
+			}
+	 	}));
 	}
 
 	onunload() {
@@ -57,6 +63,7 @@ export default class LMStudioConnectPlugin extends Plugin {
 			return;
 		}
 
-		await workspace.revealLeaf(leaf);
+		workspace.revealLeaf(leaf)
+			.then(signalChatViewActive);
 	}
 }

@@ -119,7 +119,7 @@
 	{:else}
 		{@const multiserver = modelsByServer.length > 1}
 		<div class="custom-dropdown">
-			<select bind:this={select} bind:value {onchange}>
+			<select tabindex='-1' bind:this={select} bind:value {onchange}>
 				{#each modelsByServer as { server, connected, models }}
 				{@const name = server.name === 'default' ? t('serverModal.default') : server.name}
 					{#if multiserver}
@@ -168,6 +168,9 @@
 
 	.custom-dropdown button:hover {
 		background-color: var(--dropdown-background-hover);
+	}
+	.custom-dropdown button:focus {
+		background-color: var(--background-modifier-border-focus);
 	}
 
 	.custom-dropdown div.text {

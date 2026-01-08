@@ -29,6 +29,8 @@ const DEFAULT_SETTINGS: Partial<PluginSettings> = {
 }
 export const serverRefreshRequest = $state({ watch: 0 });
 export function requestServerRefresh() { serverRefreshRequest.watch += 1; }
+export const chatViewActive = $state({ watch: 0 });
+export function signalChatViewActive() { chatViewActive.watch += 1; }
 
 type PersistenceConfig = { save: (data: PluginSettings) => Promise<void>, load: () => Promise<PluginSettings> };
 
