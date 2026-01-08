@@ -38,7 +38,7 @@ export default class LMStudioConnectPlugin extends Plugin {
 			if (leaf?.view instanceof ChatView) {
 				signalChatViewActive();
 			}
-	 	}));
+		}));
 	}
 
 	onunload() {
