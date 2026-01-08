@@ -34,7 +34,8 @@
     "send": "Send",
     "addNoteReference": "Add note reference",
     "clearChat": "Clear chat",
-    "retry": "Retry"
+    "retry": "Retry",
+	"cancel": "Cancel"
   },
   "modelPicker": {
     "chooseModel": "Choose a model...",

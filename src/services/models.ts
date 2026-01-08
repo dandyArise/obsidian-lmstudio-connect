@@ -24,6 +24,7 @@ export interface ChatMessage {
 	parts: string[]
 	display?: string
 }
+export enum SendStatus { Idle, Sending }
 
 export type ServerConnection = {
 	name: string;

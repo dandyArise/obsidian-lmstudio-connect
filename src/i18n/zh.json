@@ -34,7 +34,8 @@
     "send": "发送",
     "addNoteReference": "添加笔记引用",
     "clearChat": "清除聊天",
-    "retry": "重试"
+    "retry": "重试",
+	"cancel":"取消"
   },
   "modelPicker": {
     "chooseModel": "选择模型...",

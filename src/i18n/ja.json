@@ -34,7 +34,8 @@
     "send": "送信",
     "addNoteReference": "ノートの参照を追加",
     "clearChat": "チャットをクリア",
-    "retry": "再試行"
+    "retry": "再試行",
+	"cancel": "キャンセル"
   },
   "modelPicker": {
     "chooseModel": "モデルを選択...",

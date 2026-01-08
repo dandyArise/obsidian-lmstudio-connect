@@ -2,7 +2,7 @@
 	import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
 	import { streamText, type ModelMessage } from "ai";
 	import LMStudioConnectPlugin from "src/main";
-	import { Role, Status, type ChatMessage, type InputValue } from "src/services/models";
+	import { Role, SendStatus, Status, type ChatMessage, type InputValue } from "src/services/models";
 	import TopToolbar from "./TopToolbar.svelte";
 	import { tick } from "svelte";
 	import { setPluginContext } from "src/services/context";
@@ -35,6 +35,8 @@
 	let messages: ChatMessage[] = $state([]);
 	let bufferHeight = $state(0);
 	let errorMessage = $state("");
+	let status: SendStatus = $state(SendStatus.Idle);
+	let abortController: AbortController | undefined;
 	// svelte-ignore non_reactive_update
 	let messagesContainer: HTMLUListElement;
 	let input: ChatInput;
@@ -56,8 +58,13 @@
 		await send(cachedInput);
 	}
 
+	function onabort() {
+		abortController?.abort("Aborted by user");
+	}
+
 	async function send(message: InputValue) {
 		errorMessage = "";
+		status = SendStatus.Sending;
 		
 		messages.push({
 			role: Role.User,
@@ -70,9 +77,13 @@
 			status: Status.Pending,
 			parts: [],
 		});
+		
+		abortController = new AbortController();
+		const signal = abortController.signal;
 		const result = streamText({
 			model: provider(model),
 			prompt: toApiMessages(messages.slice(0, -1)),
+			abortSignal: signal,
 			onError({ error }) {
 				console.error(error);
 				messages = messages.slice(0, -1);
@@ -88,7 +99,7 @@
 			messagesContainer.clientHeight -
 			(lastUserMessage?.clientHeight ?? 0) -
 			gap;
-
+		
 		const response = messages[messages.length - 1];
 		for await (const textPart of result.textStream) {
 			response.parts.push(textPart);
@@ -96,6 +107,7 @@
 				response.status = Status.Streaming;
 		}
 		response.status = Status.Complete;
+		status = SendStatus.Idle;
 	}
 
 	function clearMessages(e: Event) {
@@ -127,7 +139,7 @@
 		<EmptyView />
 	{/if}
 
-	<ChatInput bind:this={input} {onsend} />
+	<ChatInput bind:this={input} {onsend} {onabort} {status} />
 </div>
 
 <style>

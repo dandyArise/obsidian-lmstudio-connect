@@ -13,15 +13,24 @@
 	} from "./codemirror/filerefwidget";
 	import type { TFile } from "obsidian";
 	import { tooltip } from "./Tooltip.svelte";
-	import type { Replacement } from "src/services/models";
+	import { type Replacement, SendStatus } from "src/services/models";
 	import { getPluginContext } from "src/services/context";
 	import { t } from "src/i18n";
 	import { chatViewActive } from "src/settings.svelte";
 
-	let { onsend } = $props();
+	let {
+		onsend,
+		onabort,
+		status: sendStatus,
+	}: {
+		onsend: () => void;
+		onabort: () => void;
+		status: SendStatus;
+	} = $props();
+
 	let plugin = getPluginContext();
 
-	$effect(() => { 
+	$effect(() => {
 		chatViewActive.watch;
 		editor?.focus();
 	});
@@ -152,7 +161,7 @@
 		editor = new EditorView({
 			doc: "",
 			extensions: [
-				placeholder(t('chat.placeholder')),
+				placeholder(t("chat.placeholder")),
 				fileRefHighlighter,
 				cursorWithinFileRef,
 				fileReferenceField,
@@ -201,17 +210,27 @@
 				class="addFileRef"
 				onclick={addFileRef}
 				{@attach icon("brackets")}
-				{@attach tooltip(t('chat.addNoteReference'))}
-				aria-label={t('chat.addNoteReference')}
+				{@attach tooltip(t("chat.addNoteReference"))}
+				aria-label={t("chat.addNoteReference")}
 			></button>
-			<button
-				class="send"
-				onclick={onsend}
-				disabled={!canSend}
-				{@attach icon("arrow-up")}
-				{@attach tooltip(t('chat.send'))}
-				aria-label={t('chat.send')}
-			></button>
+			{#if sendStatus === SendStatus.Sending}
+				<button
+					class="cancel"
+					onclick={onabort}
+					{@attach icon("square")}
+					{@attach tooltip(t("chat.cancel"))}
+					aria-label={t("chat.cancel")}
+				></button>
+			{:else}
+				<button
+					class="send"
+					onclick={onsend}
+					disabled={!canSend}
+					{@attach icon("arrow-up")}
+					{@attach tooltip(t("chat.send"))}
+					aria-label={t("chat.send")}
+				></button>
+			{/if}
 		</div>
 	</div>
 
@@ -236,13 +255,13 @@
 		border-radius: var(--radius-s);
 		padding: 0 var(--size-4-2) var(--size-4-2) var(--size-4-2);
 	}
-	
+
 	@container (min-width: 400px) {
-	  .chatbox {
-		max-width: 80%;
-		min-width: 400px;
-		margin: 0 auto;
-	  }
+		.chatbox {
+			max-width: 80%;
+			min-width: 400px;
+			margin: 0 auto;
+		}
 	}
 
 	.popover-ref {
@@ -343,8 +362,19 @@
 	button.addFileRef:hover {
 		background-color: var(--interactive-hover);
 	}
-	button.addFileRef:focus {
+	button.addFileRef:focus,
+	button.cancel:focus {
 		background-color: var(--background-modifier-border-focus);
+	}
+
+	button.cancel {
+		border-radius: 50%;
+		color: var(--interactive-accent);
+		box-shadow: none;
+		padding: var(--size-2-2) var(--size-2-3);
+	}
+	button.cancel :global(svg) {
+		fill: var(--interactive-accent);
 	}
 
 	button.send {
