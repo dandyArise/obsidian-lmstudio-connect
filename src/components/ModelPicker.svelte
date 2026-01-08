@@ -134,6 +134,7 @@
 			</select>
 			<button onclick={() => {
 				if (select?.showPicker) {
+					select.focus();
 					select.showPicker();
 				} else {
 					select?.focus();
