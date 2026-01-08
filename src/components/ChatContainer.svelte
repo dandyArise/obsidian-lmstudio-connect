@@ -132,6 +132,7 @@
 
 <style>
 	.container {
+		container-type: inline-size;
 		height: 100%;
 		display: flex;
 		flex-direction: column;

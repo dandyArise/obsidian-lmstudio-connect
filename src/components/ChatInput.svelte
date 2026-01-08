@@ -230,6 +230,14 @@
 		border-radius: var(--radius-s);
 		padding: 0 var(--size-4-2) var(--size-4-2) var(--size-4-2);
 	}
+	
+	@container (min-width: 400px) {
+	  .chatbox {
+		max-width: 80%;
+		min-width: 400px;
+		margin: 0 auto;
+	  }
+	}
 
 	.popover-ref {
 		position: absolute;
@@ -246,6 +254,7 @@
 		justify-content: space-between;
 		gap: var(--size-4-2);
 		align-items: center;
+		flex-wrap: wrap;
 	}
 	.toolbar .right {
 		display: flex;

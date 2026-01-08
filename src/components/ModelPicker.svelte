@@ -154,6 +154,7 @@
 	.custom-dropdown {
 		display: flex;
 		flex: 1;
+		min-width: 0;
 	}
 
 	.custom-dropdown button {
