@@ -63,7 +63,7 @@ export default class LMStudioConnectPlugin extends Plugin {
 			return;
 		}
 
-		workspace.revealLeaf(leaf)
+		void workspace.revealLeaf(leaf)
 			.then(signalChatViewActive);
 	}
 }
