@@ -35,7 +35,10 @@
 		editor?.focus();
 	});
 
-	export const text = async () => {
+	/**
+	* Returns text with file ref content inlined like <begin...>content</end>.
+	*/
+	export const textWithInlineFiles = async () => {
 		const text = editor.state.doc.toString();
 		const fileRefs = editor.state.field(fileReferenceField);
 		if (!fileRefs.size) {
@@ -47,7 +50,7 @@
 		for (let iter = fileRefs.iter(); iter.value; iter.next()) {
 			const file: TFile = iter.value.spec.file;
 			const fileContent = await plugin.app.vault.cachedRead(file);
-			const inserted = `[begin obsidian note: ${file.name}] ${fileContent} [/end obsidian note]`;
+			const inserted = `<begin obsidian note: ${file.name}> ${fileContent} </end obsidian note>`;
 			replacements.push({
 				from: iter.from,
 				to: iter.to,
@@ -56,6 +59,55 @@
 		}
 
 		return replaceByPosition(text, replacements);
+	};
+
+	/**
+	* Returns text with file refs mentioned like @filename.md.
+	*/
+	export const text = async () => {
+		const text = editor.state.doc.toString();
+		const fileRefs = editor.state.field(fileReferenceField);
+		if (!fileRefs.size) {
+			return text;
+		}
+		
+		//NOTE: if we go this route, codemirror can do this anyway cant it?
+		//the inserfileref would insert and then replace it, then the above
+		//toString would obviate this.
+
+		//swap file ref markers for their actual note content
+		let replacements: Replacement[] = [];
+		for (let iter = fileRefs.iter(); iter.value; iter.next()) {
+			const file: TFile = iter.value.spec.file;
+			const inserted = `@${file.path}`;
+			replacements.push({
+				from: iter.from,
+				to: iter.to,
+				value: inserted,
+			});
+		}
+
+		return replaceByPosition(text, replacements);
+	};
+	
+	/**
+	* Returns text with file content separated out.
+	*/
+	export const content = async (): Promise<{ text: string, markdownFiles?: string[]} > => {
+		const text = editor.state.doc.toString();
+		const fileRefs = editor.state.field(fileReferenceField);
+		if (!fileRefs.size) {
+			return { text };
+		}
+
+		let markdownFiles: string[] = [];
+		for (let iter = fileRefs.iter(); iter.value; iter.next()) {
+			const file: TFile = iter.value.spec.file;
+			const fileContent = await plugin.app.vault.cachedRead(file);
+			markdownFiles.push(fileContent);
+		}
+
+		return { text, markdownFiles }
 	};
 
 	export const contentHTML = () => {
