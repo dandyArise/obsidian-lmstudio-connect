@@ -25,8 +25,13 @@ export interface InputValue { text: string, markdownFiles?: string[], display: s
 
 export type ResponseMessage = { type: "text", parts: string[], isFinal: boolean }
 	| { type: "reasoning", parts: string[] }
-	| { type: "tool-call", id: string, name: string }
+	| { type: "tool-call", id: string, name: string, input: any }
 	| { type: "tool-result", id: string, content: string };
+
+export const orderOf = (type: string) => {
+	if (type === 'text') return 1;
+	return 0;
+};
 
 export interface Exchange {
 	created: number;
@@ -39,12 +44,12 @@ export interface Exchange {
 
 export function toApiMessages(exchanges: Exchange[]): ModelMessage[] {
 	let modelMessages: ModelMessage[] = [];
-	
-	for (const {userMessage, response} of exchanges) {
-		modelMessages.push({ role: "user", content: [{ type: "text", text: userMessage.content }]});
-		
+
+	for (const { userMessage, response } of exchanges) {
+		modelMessages.push({ role: "user", content: [{ type: "text", text: userMessage.content }] });
+
 		for (const message of response.messages) {
-			switch(message.type) { 
+			switch (message.type) {
 				case "text":
 					modelMessages.push({ role: "assistant", content: message.parts.join("") });
 					break;

@@ -17,7 +17,6 @@ export function createReadFileTool(plugin: LMStudioConnectPlugin) {
 		execute: async ({ filePath }: { filePath: string }) => {
 			try {
 				const file = plugin.app.vault.getFileByPath(filePath);
-				console.log("file read requested: ", filePath);
 				if (!file) {
 					throw new Error(`File not found: ${filePath}`);
 				}
@@ -26,7 +25,7 @@ export function createReadFileTool(plugin: LMStudioConnectPlugin) {
 
 				return fileContent;
 			} catch (error) {
-				console.log("err: ", error);
+				console.error("Error reading file", error);
 				throw error;
 			}
 		}

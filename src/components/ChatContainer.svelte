@@ -70,11 +70,12 @@
 			},
 		});
 		currentExchange = exchanges[exchanges.length - 1];
+		// const reasoning: ResponseMessage = $state({ type: "reasoning", parts: []}); 
 
 		abortController = new AbortController();
 		const abortSignal = abortController.signal;
 
-		const result = streamText({
+ 		const result = streamText({
 			model: provider(model),
 			system: prompts.system_prompt,
 			messages: toApiMessages(exchanges),
@@ -82,24 +83,29 @@
 				readFile: createReadFileTool(plugin),
 			},
 			stopWhen: stepCountIs(5),
-			onChunk({ chunk }) {
+			// onChunk({ chunk }) {
+				//NOTE: saving reasoning display for later.
 				// console.log("chunk: ", chunk);
+				// if (chunk.type === "reasoning-delta") {
+				// 	reasoning.parts.push(chunk.text);
+				// 	if (currentExchange && !currentExchange?.response.messages.some(m => m.type === "reasoning")) {
+				// 		currentExchange.response.messages.unshift(reasoning);
+				// 	}
+				// }
+			// },
+			onStepFinish({ toolCalls }) {
+				for (const call of toolCalls) {
+					currentExchange?.response.messages.push(
+						{ type: "tool-call", id: call.toolCallId, name: call.toolName, input: call.input }
+					);
+				}
 			},
-			onStepFinish({
-				text,
-				toolCalls,
-				toolResults,
-				finishReason,
-				usage,
-			}) {
-				// console.log("step finished: ", text, toolCalls, toolResults);
-			},
+			// onFinish({ response }) {
+			// 	console.log("rr: ", response.messages);
+			// },
 			abortSignal,
 			onError({ error }) {
 				errored = true;
-				// if (currentExchange) {
-				// 	currentExchange.response.status = "error";
-				// }
 				console.error(error);
 				requestServerRefresh();
 			},

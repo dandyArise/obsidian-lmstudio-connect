@@ -37,6 +37,11 @@
     "retry": "Retry",
 	"cancel": "Cancel"
   },
+  "messages": {
+	  "tool-call": {
+		  "readFile": "Read {{filePath}}"
+	   }
+  },
   "modelPicker": {
     "chooseModel": "Choose a model...",
     "noModelsFound": "No models found",

@@ -17,7 +17,7 @@ void i18n.init({
 	},
 	interpolation: {
 		escapeValue: false
-	}
+	},
 });
 
 export const t = i18n.t.bind(i18n);
