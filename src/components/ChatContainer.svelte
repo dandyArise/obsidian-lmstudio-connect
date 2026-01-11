@@ -1,30 +1,28 @@
 <script lang="ts">
 	import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
-	import { streamText } from "ai";
+	import { streamText, stepCountIs } from "ai";
 	import LMStudioConnectPlugin from "src/main";
 	import {
-		Role,
-		SendStatus,
-		Status,
 		toApiMessages,
-		type ChatMessage,
+		type Exchange,
 		type InputValue,
+		type ResponseMessage,
 	} from "src/services/models";
-	import TopToolbar from "./TopToolbar.svelte";
-	import { tick } from "svelte";
 	import { setPluginContext } from "src/services/context";
 	import EmptyView from "./EmptyView.svelte";
-	import Message from "./Message.svelte";
 	import {
 		currentServer,
 		requestServerRefresh,
 		toV1BaseURL,
 	} from "src/settings.svelte";
-	import ErrorMessage from "./ErrorMessage.svelte";
 	import ChatInput from "./ChatInput.svelte";
-	import { t } from "src/i18n";
-	import prompts from '../services/prompt.json';
+	import prompts from "../llm/prompt.json";
+	import { createReadFileTool } from "src/llm/tools";
+	import TopToolbar from "./TopToolbar.svelte";
+	import ExchangeView from "./Exchange.svelte";
+
 	let { plugin }: { plugin: LMStudioConnectPlugin } = $props();
+
 	// svelte-ignore state_referenced_locally
 	setPluginContext(plugin);
 
@@ -39,19 +37,17 @@
 		}),
 	);
 
-	let messages: ChatMessage[] = $state([]);
+	let exchanges: Exchange[] = $state([]);
+	let currentExchange: Exchange | undefined = $state();
+	let abortController: AbortController | undefined = $state();
+	let onabort = $derived(abortController ? () => { abortController?.abort() } : undefined);
 	let bufferHeight = $state(0);
-	let errorMessage = $state("");
-	let status: SendStatus = $state(SendStatus.Idle);
-	let abortController: AbortController | undefined;
-	// svelte-ignore non_reactive_update
-	let messagesContainer: HTMLUListElement;
+	let errored: boolean = false;
 	let input: ChatInput;
 	let cachedInput: InputValue;
-	const gap = 20;
 
 	async function onsend() {
-		if (errorMessage) requestServerRefresh();
+		if (errored) requestServerRefresh();
 
 		const text = await input.text();
 		const display = input.contentHTML();
@@ -60,68 +56,77 @@
 		await send(cachedInput);
 	}
 
-	function onabort() {
-		abortController?.abort("Aborted by user");
-	}
-	
 	async function send(message: InputValue) {
-		errorMessage = "";
-		status = SendStatus.Sending;
-		
-		messages.push({
-			role: Role.User,
-			status: Status.Complete,
-			parts: [message.text],
-			fileParts: message.markdownFiles,
-			display: message.display
+		errored = false;
+		exchanges.push({
+			created: Date.now(),
+			userMessage: {
+				content: message.text,
+				displayHTML: message.display,
+			},
+			response: {
+				status: "in-progress",
+				messages: [],
+			},
 		});
-		messages.push({
-			role: Role.Assistant,
-			status: Status.Pending,
-			parts: [],
-		});
-		
+		currentExchange = exchanges[exchanges.length - 1];
+
 		abortController = new AbortController();
-		const signal = abortController.signal;
+		const abortSignal = abortController.signal;
+
 		const result = streamText({
 			model: provider(model),
 			system: prompts.system_prompt,
-			prompt: toApiMessages(messages.slice(0, -1)),
-			abortSignal: signal,
+			messages: toApiMessages(exchanges),
+			tools: {
+				readFile: createReadFileTool(plugin),
+			},
+			stopWhen: stepCountIs(5),
+			onChunk({ chunk }) {
+				// console.log("chunk: ", chunk);
+			},
+			onStepFinish({
+				text,
+				toolCalls,
+				toolResults,
+				finishReason,
+				usage,
+			}) {
+				// console.log("step finished: ", text, toolCalls, toolResults);
+			},
+			abortSignal,
 			onError({ error }) {
+				errored = true;
+				// if (currentExchange) {
+				// 	currentExchange.response.status = "error";
+				// }
 				console.error(error);
-				messages = messages.slice(0, -1);
-				errorMessage = t('errors.somethingWentWrong');
 				requestServerRefresh();
 			},
 		});
+		//TODO: may be better to use onchunk and onfinished for the parts or for
+		//serializing the chat.
+
 		input.clear();
 
-		await tick();
-		const lastUserMessage = messagesContainer.children[messages.length - 2];
-		bufferHeight =
-			messagesContainer.clientHeight -
-			(lastUserMessage?.clientHeight ?? 0) -
-			gap;
-		
-		const response = messages[messages.length - 1];
-		for await (const textPart of result.textStream) {
-			response.parts.push(textPart);
-			if (response.status === Status.Pending)
-				response.status = Status.Streaming;
+		const finalMessage: ResponseMessage = $state({ type: "text", parts: [], isFinal: true });
+		currentExchange.response.messages.push(finalMessage);
+		for await (const part of result.textStream) {
+			finalMessage.parts.push(part);
 		}
-		response.status = Status.Complete;
-		status = SendStatus.Idle;
+
+		abortController = undefined;
+		currentExchange.response.status = errored ? "error" : "completed";
 	}
 
 	function clearMessages(e: Event) {
 		e.preventDefault();
-		messages = [];
+		exchanges = [];
 	}
 
 	function resend() {
 		requestServerRefresh();
-		messages = messages.slice(0, -1);
+		exchanges = exchanges.slice(0, -1);
 		send(cachedInput);
 	}
 </script>
@@ -129,24 +134,17 @@
 <div class="lmsc container">
 	<TopToolbar onclear={clearMessages} />
 
-	{#if messages.length}
-		<ul
-			bind:this={messagesContainer}
-			style="--buffer-height: {bufferHeight}px"
-		>
-			{#each messages as message}
-				<Message {message} />
+	{#if exchanges.length}
+		<ul bind:clientHeight={bufferHeight} style="--buffer-height: {bufferHeight}px">
+			{#each exchanges as exchange}
+				<ExchangeView {exchange} onretry={resend} />
 			{/each}
-
-			{#if errorMessage}
-				<ErrorMessage message={errorMessage} onretry={resend} />
-			{/if}
 		</ul>
 	{:else}
 		<EmptyView />
 	{/if}
 
-	<ChatInput bind:this={input} {onsend} {onabort} {status} />
+	<ChatInput bind:this={input} {onsend} {onabort} />
 </div>
 
 <style>
@@ -169,5 +167,10 @@
 		gap: var(--size-4-3);
 		padding: 0;
 		margin: var(--size-4-1) 0;
+	}
+
+	ul > :global(li:last-of-type) {
+		min-height: var(--buffer-height);
+		flex-shrink: 0;
 	}
 </style>

@@ -1,6 +1,6 @@
 //models (interfaces/types, not llms...)
 
-import type { ModelMessage, TextPart, FilePart } from "ai";
+import type { ModelMessage } from "ai";
 
 export interface ModelInfo {
 	id: string,
@@ -10,6 +10,12 @@ export interface ModelInfo {
 	max_context_length: number
 }
 
+export type ServerConnection = {
+	name: string;
+	url: string;
+	status: "pending" | "ok" | "error";
+	isDefault: boolean;
+};
 export interface Replacement {
 	from: number;
 	to: number;
@@ -17,55 +23,35 @@ export interface Replacement {
 }
 export interface InputValue { text: string, markdownFiles?: string[], display: string }
 
-export enum Role { Assistant = "assistant", User = "user" }
-export enum Status { Pending = "pending", Streaming = "streaming", Complete = "complete" }
+export type ResponseMessage = { type: "text", parts: string[], isFinal: boolean }
+	| { type: "reasoning", parts: string[] }
+	| { type: "tool-call", id: string, name: string }
+	| { type: "tool-result", id: string, content: string };
 
-//TODO: a need to break this out into user/assistant variants is near..
-export interface ChatMessage {
-	status: Status;
-	role: Role;
-	parts: string[]
-	fileParts?: string[]
-	display?: string
+export interface Exchange {
+	created: number;
+	userMessage: { content: string, displayHTML: string };
+	response: {
+		status: "in-progress" | "completed" | "error";
+		messages: ResponseMessage[];
+	}
 }
-export enum SendStatus { Idle, Sending }
 
-export type ServerConnection = {
-	name: string;
-	url: string;
-	status: "pending" | "ok" | "error";
-	isDefault: boolean;
-};
-
-export function toApiMessages(messages: ChatMessage[]): ModelMessage[] {
+export function toApiMessages(exchanges: Exchange[]): ModelMessage[] {
 	let modelMessages: ModelMessage[] = [];
-	for (const m of messages) {
-		if (m.role === Role.Assistant) {
-			modelMessages.push({ role: m.role, content: m.parts.join("") });
-		} else if (m.role === Role.User) {
-			const content: (TextPart | FilePart)[] = [];
-			const textPart: TextPart | undefined = m.parts.some((p) => p)
-				? { type: "text", text: m.parts.join("") }
-				: undefined;
-
-			//NOTE: apparently ai sdk only supports image and pdf so its recommended to use textpart
-			const fileParts: TextPart[] | undefined = m.fileParts?.map(f => ({
-				type: "text",
-				text: f
-			}));
-			// (f) => ({
-			// 	type: "file",
-			// 	data: f,
-			// 	mediaType: "text/markdown",
-			// }),
-			// );
-			if (textPart) {
-				content.push(textPart);
+	
+	for (const {userMessage, response} of exchanges) {
+		modelMessages.push({ role: "user", content: [{ type: "text", text: userMessage.content }]});
+		
+		for (const message of response.messages) {
+			switch(message.type) { 
+				case "text":
+					modelMessages.push({ role: "assistant", content: message.parts.join("") });
+					break;
+				//TODO: other types...
 			}
-			fileParts?.forEach((f) => content.push(f));
-			modelMessages.push({ role: m.role, content });
 		}
 	}
-	console.log(modelMessages);
+
 	return modelMessages;
 }
