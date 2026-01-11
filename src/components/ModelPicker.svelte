@@ -7,7 +7,7 @@
 		serverRefreshRequest,
 		type LMStudioServer,
 		type PluginSettings,
-	} from "src/settings.svelte";
+	} from "src/services/settings.svelte";
 	import type LMStudioConnectPlugin from "src/main";
 	import { tooltip } from "./Tooltip.svelte";
 	import { icon } from "./Icon.svelte";

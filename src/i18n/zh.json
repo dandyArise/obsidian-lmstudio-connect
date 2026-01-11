@@ -1,13 +1,13 @@
 {
   "plugin": {
     "name": "LM Studio Connect",
-    "openCommand": "打开 {{name}}"
+    "openCommand": "打开 LM Studio Connect"
   },
   "commands": {
     "openChatView": "打开聊天视图"
   },
   "settings": {
-    "serverName": "{{name}} 服务器",
+    "serverName": "LM Studio 服务器",
     "serverDescription": "配置到一个或多个服务器的连接。",
     "manage": "管理"
   },

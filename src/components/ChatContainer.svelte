@@ -14,7 +14,7 @@
 		currentServer,
 		requestServerRefresh,
 		toV1BaseURL,
-	} from "src/settings.svelte";
+	} from "src/services/settings.svelte";
 	import ChatInput from "./ChatInput.svelte";
 	import prompts from "../llm/prompt.json";
 	import { createReadFileTool } from "src/llm/tools";

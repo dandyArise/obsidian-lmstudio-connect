@@ -16,7 +16,7 @@
 	import { type Replacement } from "src/services/models";
 	import { getPluginContext } from "src/services/context";
 	import { t } from "src/i18n";
-	import { chatViewActive } from "src/settings.svelte";
+	import { chatViewActive } from "src/services/settings.svelte";
 
 	let {
 		onsend,

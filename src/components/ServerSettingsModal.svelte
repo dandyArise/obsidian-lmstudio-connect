@@ -4,7 +4,7 @@
 		MODELS_ENDPOINT,
 		requestServerRefresh,
 		type PluginSettings,
-	} from "src/settings.svelte";
+	} from "src/services/settings.svelte";
 	import { requestUrl } from "obsidian";
 	import { icon } from "./Icon.svelte";
 	import { tooltip } from "./Tooltip.svelte";
