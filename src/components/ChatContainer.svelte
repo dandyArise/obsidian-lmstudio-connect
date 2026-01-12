@@ -1,9 +1,8 @@
 <script lang="ts">
 	import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
-	import { streamText, stepCountIs } from "ai";
+	import { streamText, stepCountIs, type ModelMessage, type AssistantModelMessage, type ToolModelMessage  } from "ai";
 	import LMStudioConnectPlugin from "src/main";
 	import {
-		toApiMessages,
 		type Exchange,
 		type InputValue,
 		type ResponseMessage
@@ -59,6 +58,7 @@
 				status: "in-progress",
 				messages: [],
 			},
+			ai_sdk_messages: []
 		});
 		currentExchange = exchanges[exchanges.length - 1];
 		// const reasoning: ResponseMessage = $state({ type: "reasoning", parts: []}); 
@@ -91,9 +91,11 @@
 					);
 				}
 			},
-			// onFinish({ response }) {
-			// 	console.log("rr: ", response.messages);
-			// },
+			onFinish({ response }) {
+				if (currentExchange) {
+					currentExchange.ai_sdk_messages = response.messages;
+				}
+			},
 			abortSignal,
 			onError({ error }) {
 				errored = true;
@@ -101,9 +103,6 @@
 				modelStore.refreshAvailableModels();
 			},
 		});
-		//TODO: may be better to use onchunk and onfinished for the parts or for
-		//serializing the chat.
-
 		input.clear();
 
 		const finalMessage: ResponseMessage = $state({ type: "text", parts: [], isFinal: true });
@@ -125,6 +124,20 @@
 		modelStore.refreshAvailableModels();
 		exchanges = exchanges.slice(0, -1);
 		send(cachedInput);
+	}
+	
+	function toApiMessages(exchanges: Exchange[]): ModelMessage[] {
+		let modelMessages: ModelMessage[] = [];
+
+		for (const { userMessage, ai_sdk_messages } of exchanges) {
+			modelMessages.push({ role: "user", content: [{ type: "text", text: userMessage.content }] });
+
+			ai_sdk_messages
+				.map(m => $state.snapshot(m) as AssistantModelMessage | ToolModelMessage)
+				.forEach(m => modelMessages.push(m))
+		}
+
+		return modelMessages;
 	}
 </script>
 

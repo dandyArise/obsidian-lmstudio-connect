@@ -1,6 +1,6 @@
 //models (interfaces/types, not llms...)
 
-import type { ModelMessage } from "ai";
+import type { AssistantModelMessage, ToolModelMessage } from "ai";
 import type { ToolInputs } from "src/llm/tools";
 
 export interface ModelInfo {
@@ -50,23 +50,6 @@ export interface Exchange {
 		status: "in-progress" | "completed" | "error";
 		messages: ResponseMessage[];
 	}
+	ai_sdk_messages: (AssistantModelMessage | ToolModelMessage)[];
 }
 
-export function toApiMessages(exchanges: Exchange[]): ModelMessage[] {
-	const modelMessages: ModelMessage[] = [];
-
-	for (const { userMessage, response } of exchanges) {
-		modelMessages.push({ role: "user", content: [{ type: "text", text: userMessage.content }] });
-
-		for (const message of response.messages) {
-			switch (message.type) {
-				case "text":
-					modelMessages.push({ role: "assistant", content: message.parts.join("") });
-					break;
-				//TODO: other types...
-			}
-		}
-	}
-
-	return modelMessages;
-}
