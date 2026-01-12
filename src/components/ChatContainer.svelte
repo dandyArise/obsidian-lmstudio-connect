@@ -7,6 +7,7 @@
 		type Exchange,
 		type InputValue,
 		type ResponseMessage,
+		type ToolCallMessage,
 	} from "src/services/models";
 	import { setPluginContext } from "src/services/context";
 	import EmptyView from "./EmptyView.svelte";
@@ -93,8 +94,8 @@
 				// 	}
 				// }
 			// },
-			onStepFinish({ toolCalls }) {
-				for (const call of toolCalls) {
+			onStepFinish({ staticToolCalls }) {
+				for (const call of staticToolCalls) {
 					currentExchange?.response.messages.push(
 						{ type: "tool-call", id: call.toolCallId, name: call.toolName, input: call.input }
 					);

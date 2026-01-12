@@ -1,6 +1,7 @@
 //models (interfaces/types, not llms...)
 
 import type { ModelMessage } from "ai";
+import type { ToolInputs } from "src/llm/tools";
 
 export interface ModelInfo {
 	id: string,
@@ -23,9 +24,18 @@ export interface Replacement {
 }
 export interface InputValue { text: string, markdownFiles?: string[], display: string }
 
+export type ToolCallMessage = {
+  [K in keyof ToolInputs]: { 
+    type: "tool-call"; 
+    id: string; 
+    name: K; 
+    input: ToolInputs[K]; 
+  }
+}[keyof ToolInputs];
+
 export type ResponseMessage = { type: "text", parts: string[], isFinal: boolean }
 	| { type: "reasoning", parts: string[] }
-	| { type: "tool-call", id: string, name: string, input: any }
+	| ToolCallMessage
 	| { type: "tool-result", id: string, content: string };
 
 export const orderOf = (type: string) => {
@@ -43,7 +53,7 @@ export interface Exchange {
 }
 
 export function toApiMessages(exchanges: Exchange[]): ModelMessage[] {
-	let modelMessages: ModelMessage[] = [];
+	const modelMessages: ModelMessage[] = [];
 
 	for (const { userMessage, response } of exchanges) {
 		modelMessages.push({ role: "user", content: [{ type: "text", text: userMessage.content }] });

@@ -1,5 +1,5 @@
 import LMStudioConnectPlugin from "src/main";
-import type { PluginSettings } from "src/settings.svelte";
+import type { PluginSettings } from "src/services/settings.svelte";
 import { createContext } from "svelte";
 
 export const [getPluginContext, setPluginContext] = createContext<LMStudioConnectPlugin>();
