@@ -3,9 +3,11 @@ import { ChatView, VIEW_TYPE_CHAT } from './chatview';
 import { SettingsTab, } from './settingstab';
 import { type PluginSettings, createSettings, signalChatViewActive } from './services/settings.svelte';
 import { t } from './i18n';
+import { ModelStore } from './services/models-store.svelte';
 
 export default class LMStudioConnectPlugin extends Plugin {
 	settings: PluginSettings;
+	modelStore: ModelStore;
 	unloadSettings: () => void;
 
 	async onload() {
@@ -15,6 +17,7 @@ export default class LMStudioConnectPlugin extends Plugin {
 		});
 		this.settings = settings;
 		this.unloadSettings = dispose;
+		this.modelStore = new ModelStore(settings);
 
 		this.addSettingTab(new SettingsTab(this.app, this));
 

@@ -2,7 +2,6 @@
 	import {
 		DEFAULT_SERVER_URL,
 		MODELS_ENDPOINT,
-		requestServerRefresh,
 		type PluginSettings,
 	} from "src/services/settings.svelte";
 	import { requestUrl } from "obsidian";
@@ -12,12 +11,9 @@
 	import type { ServerConnection } from "src/services/models";
 	import { t } from "src/i18n";
 
-	let {
-		settings,
-		onClose,
-		onSubmit,
-	}: {
+	let { settings, refreshServers, onClose, onSubmit, }: {
 		settings: PluginSettings;
+		refreshServers: () => void;
 		onClose: () => void;
 		onSubmit: (result: ServerConnection[]) => void;
 	} = $props();
@@ -108,7 +104,7 @@
 		}
 		
 		showCORStip = showCORStip || !ok;
-		requestServerRefresh();
+		refreshServers();
 
 		server.status = ok ? "ok" : "error";
 	}

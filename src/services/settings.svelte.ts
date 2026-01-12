@@ -12,8 +12,6 @@ export interface LMStudioServer {
 }
 
 export const MODELS_ENDPOINT = '/v1/models';
-export const toV1BaseURL = (url: string) => url + '/v1';
-export const currentServer = (settings: PluginSettings) => settings.servers.find(s => s.name === settings.lastUsedServer);
 export const DEFAULT_SERVER_URL = 'http://127.0.0.1:1234';
 const DEFAULT_SERVER: LMStudioServer = { name: 'default', url: DEFAULT_SERVER_URL, lastUsedModel: '' };
 const DEFAULT_SETTINGS: Partial<PluginSettings> = {
@@ -21,9 +19,7 @@ const DEFAULT_SETTINGS: Partial<PluginSettings> = {
 	servers: [DEFAULT_SERVER]
 }
 
-export const serverRefreshRequest = $state({ watch: 0 });
 export const chatViewActive = $state({ watch: 0 });
-export function requestServerRefresh() { serverRefreshRequest.watch += 1; }
 export function signalChatViewActive() { chatViewActive.watch += 1; }
 
 type PersistenceConfig = { save: (data: PluginSettings) => Promise<void>, load: () => Promise<PluginSettings> };
@@ -71,6 +67,9 @@ export async function createSettings(persistence: PersistenceConfig) {
 		}
 	}
 
-	return { settings, dispose }
+	return { 
+		// svelte-ignore state_referenced_locally
+		settings, 
+		dispose }
 }
 

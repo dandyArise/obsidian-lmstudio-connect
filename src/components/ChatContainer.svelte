@@ -6,16 +6,10 @@
 		toApiMessages,
 		type Exchange,
 		type InputValue,
-		type ResponseMessage,
-		type ToolCallMessage,
+		type ResponseMessage
 	} from "src/services/models";
 	import { setPluginContext } from "src/services/context";
 	import EmptyView from "./EmptyView.svelte";
-	import {
-		currentServer,
-		requestServerRefresh,
-		toV1BaseURL,
-	} from "src/services/settings.svelte";
 	import ChatInput from "./ChatInput.svelte";
 	import prompts from "../llm/prompt.json";
 	import { createReadFileTool } from "src/llm/tools";
@@ -23,18 +17,14 @@
 	import ExchangeView from "./Exchange.svelte";
 
 	let { plugin }: { plugin: LMStudioConnectPlugin } = $props();
-
 	// svelte-ignore state_referenced_locally
 	setPluginContext(plugin);
-
-	let server = $derived(currentServer(plugin.settings));
-	let baseURL = $derived(server ? toV1BaseURL(server.url) : "");
-	let model = $derived(server?.lastUsedModel ?? "");
+	const modelStore = $derived(plugin.modelStore);
 
 	let provider = $derived(
 		createOpenAICompatible({
 			name: "lmstudio",
-			baseURL,
+			baseURL: modelStore.currentBaseUrl,
 		}),
 	);
 
@@ -48,7 +38,7 @@
 	let cachedInput: InputValue;
 
 	async function onsend() {
-		if (errored) requestServerRefresh();
+		if (errored) modelStore.refreshAvailableModels();
 
 		const text = await input.text();
 		const display = input.contentHTML();
@@ -77,7 +67,7 @@
 		const abortSignal = abortController.signal;
 
  		const result = streamText({
-			model: provider(model),
+			model: provider(modelStore.currentModel),
 			system: prompts.system_prompt,
 			messages: toApiMessages(exchanges),
 			tools: {
@@ -108,7 +98,7 @@
 			onError({ error }) {
 				errored = true;
 				console.error(error);
-				requestServerRefresh();
+				modelStore.refreshAvailableModels();
 			},
 		});
 		//TODO: may be better to use onchunk and onfinished for the parts or for
@@ -132,7 +122,7 @@
 	}
 
 	function resend() {
-		requestServerRefresh();
+		modelStore.refreshAvailableModels();
 		exchanges = exchanges.slice(0, -1);
 		send(cachedInput);
 	}

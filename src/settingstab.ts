@@ -4,7 +4,7 @@ import ServerSettingsComponent from "./components/ServerSettingsModal.svelte";
 import { mount, unmount } from "svelte";
 import type { ServerConnection } from "./services/models";
 import { t } from "./i18n";
-import { requestServerRefresh, type PluginSettings, type LMStudioServer } from "./services/settings.svelte";
+import { type PluginSettings, type LMStudioServer } from "./services/settings.svelte";
 
 export class SettingsTab extends PluginSettingTab {
 	plugin: LMStudioConnectPlugin;
@@ -28,6 +28,7 @@ export class SettingsTab extends PluginSettingTab {
 					new LMStudioServerSettingsModal(
 						this.app,
 						this.plugin.settings,
+						() => { this.plugin.modelStore.refreshAvailableModels() },
 						(servers: ServerConnection[]) => {
 							const current: LMStudioServer[] = this.plugin.settings.servers;
 
@@ -46,7 +47,7 @@ export class SettingsTab extends PluginSettingTab {
 							current.filter(c => !servers.find(s => s.name === c.name))
 								.forEach(f => current.remove(f));
 
-							requestServerRefresh()
+							this.plugin.modelStore.refreshAvailableModels();
 						}
 					).open();
 				})
@@ -57,13 +58,14 @@ export class SettingsTab extends PluginSettingTab {
 export class LMStudioServerSettingsModal extends Modal {
 	settingsComponent: ReturnType<typeof ServerSettingsComponent> | undefined;
 
-	constructor(app: App, settings: PluginSettings, onSubmit: (result: ServerConnection[]) => void) {
+	constructor(app: App, settings: PluginSettings, refreshServers: () => void, onSubmit: (result: ServerConnection[]) => void) {
 		super(app);
 		this.setTitle(t('settings.serverName'));
 		this.settingsComponent = mount(ServerSettingsComponent, {
 			target: this.contentEl,
 			props: {
 				settings,
+				refreshServers,
 				onClose: () => this.close(),
 				onSubmit: (result: ServerConnection[]) => {
 					this.close();
