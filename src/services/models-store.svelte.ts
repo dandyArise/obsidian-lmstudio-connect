@@ -63,7 +63,7 @@ export class ModelStore {
 	* current state of all servers and models.
 	**/
 	listModelsFromAllServers = $derived.by(() => {
-		this._serverRefreshRequested;
+		void this._serverRefreshRequested;
 		return (async () => {
 			const listModelsPromises = this._settings.servers.map((s) =>
 				this.#listModels(s.url),
