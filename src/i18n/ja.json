@@ -37,6 +37,11 @@
     "retry": "再試行",
 	"cancel": "キャンセル"
   },
+  "messages": {
+	  "tool-call": {
+		  "readFile": "{{filePath}} を読み込みました"
+	   }
+  },
   "modelPicker": {
     "chooseModel": "モデルを選択...",
     "noModelsFound": "モデルが見つかりません",

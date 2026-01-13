@@ -1,19 +1,26 @@
 <script lang="ts">
 	import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
-	import { streamText, stepCountIs, type ModelMessage, type AssistantModelMessage, type ToolModelMessage  } from "ai";
+	import {
+		streamText,
+		stepCountIs,
+		type ModelMessage,
+		type AssistantModelMessage,
+		type ToolModelMessage,
+	} from "ai";
 	import LMStudioConnectPlugin from "src/main";
 	import {
 		type Exchange,
 		type InputValue,
-		type ResponseMessage
+		type ResponseMessage,
 	} from "src/services/models";
 	import { setPluginContext } from "src/services/context";
 	import EmptyView from "./EmptyView.svelte";
 	import ChatInput from "./ChatInput.svelte";
-	import prompts from "../llm/prompt.json";
 	import { createReadFileTool } from "src/llm/tools";
+	import { createCurrentNotesPrompt, createUserPrompt, systemPrompt } from "src/llm/prompts";
 	import TopToolbar from "./TopToolbar.svelte";
 	import ExchangeView from "./Exchange.svelte";
+	import { getOpenFiles } from "src/services/obsidian-utils";
 
 	let { plugin }: { plugin: LMStudioConnectPlugin } = $props();
 	// svelte-ignore state_referenced_locally
@@ -30,7 +37,7 @@
 	let exchanges: Exchange[] = $state([]);
 	let currentExchange: Exchange | undefined = $state();
 	let abortController: AbortController | undefined = $state();
-	let onabort = $derived(abortController ? () => { abortController?.abort() } : undefined);
+	let onabort = $derived( abortController ? () => { abortController?.abort(); } : undefined);
 	let bufferHeight = $state(0);
 	let errored: boolean = false;
 	let input: ChatInput;
@@ -58,37 +65,29 @@
 				status: "in-progress",
 				messages: [],
 			},
-			ai_sdk_messages: []
+			ai_sdk_messages: [],
 		});
 		currentExchange = exchanges[exchanges.length - 1];
-		// const reasoning: ResponseMessage = $state({ type: "reasoning", parts: []}); 
 
 		abortController = new AbortController();
 		const abortSignal = abortController.signal;
 
- 		const result = streamText({
+		const result = streamText({
 			model: provider(modelStore.currentModel),
-			system: prompts.system_prompt,
+			system: systemPrompt,
 			messages: toApiMessages(exchanges),
 			tools: {
 				readFile: createReadFileTool(plugin),
 			},
 			stopWhen: stepCountIs(5),
-			// onChunk({ chunk }) {
-				//NOTE: saving reasoning display for later.
-				// console.log("chunk: ", chunk);
-				// if (chunk.type === "reasoning-delta") {
-				// 	reasoning.parts.push(chunk.text);
-				// 	if (currentExchange && !currentExchange?.response.messages.some(m => m.type === "reasoning")) {
-				// 		currentExchange.response.messages.unshift(reasoning);
-				// 	}
-				// }
-			// },
 			onStepFinish({ staticToolCalls }) {
 				for (const call of staticToolCalls) {
-					currentExchange?.response.messages.push(
-						{ type: "tool-call", id: call.toolCallId, name: call.toolName, input: call.input }
-					);
+					currentExchange?.response.messages.push({
+						type: "tool-call",
+						id: call.toolCallId,
+						name: call.toolName,
+						input: call.input,
+					});
 				}
 			},
 			onFinish({ response }) {
@@ -105,7 +104,11 @@
 		});
 		input.clear();
 
-		const finalMessage: ResponseMessage = $state({ type: "text", parts: [], isFinal: true });
+		const finalMessage: ResponseMessage = $state({
+			type: "text",
+			parts: [],
+			isFinal: true,
+		});
 		currentExchange.response.messages.push(finalMessage);
 		for await (const part of result.textStream) {
 			finalMessage.parts.push(part);
@@ -125,16 +128,27 @@
 		exchanges = exchanges.slice(0, -1);
 		send(cachedInput);
 	}
-	
-	function toApiMessages(exchanges: Exchange[]): ModelMessage[] {
-		let modelMessages: ModelMessage[] = [];
 
-		for (const { userMessage, ai_sdk_messages } of exchanges) {
-			modelMessages.push({ role: "user", content: [{ type: "text", text: userMessage.content }] });
+	function toApiMessages(exchanges: Exchange[]): ModelMessage[] {
+		const modelMessages: ModelMessage[] = [];
+		const currentNotes: string[] = getOpenFiles(plugin).map(f => f.path); 
+
+		for (let i = 0; i < exchanges.length; i++) {
+			const { userMessage, ai_sdk_messages } = exchanges[i];
+			const query = createUserPrompt(userMessage.content);
+
+			const text = i === 0 
+			? [createCurrentNotesPrompt(currentNotes), query].join('\n\n')
+			: query 
+
+			modelMessages.push({
+				role: "user",
+				content: [{ type: "text", text }],
+			});
 
 			ai_sdk_messages
-				.map(m => $state.snapshot(m) as AssistantModelMessage | ToolModelMessage)
-				.forEach(m => modelMessages.push(m))
+				.map( (m) => $state.snapshot(m) as | AssistantModelMessage | ToolModelMessage)
+				.forEach((m) => modelMessages.push(m));
 		}
 
 		return modelMessages;
@@ -145,7 +159,10 @@
 	<TopToolbar onclear={clearMessages} />
 
 	{#if exchanges.length}
-		<ul bind:clientHeight={bufferHeight} style="--buffer-height: {bufferHeight}px">
+		<ul
+			bind:clientHeight={bufferHeight}
+			style="--buffer-height: {bufferHeight}px"
+		>
 			{#each exchanges as exchange}
 				<ExchangeView {exchange} onretry={resend} />
 			{/each}
