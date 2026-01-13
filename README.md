@@ -20,6 +20,7 @@ use LLMs with your notes privately and offline.
 - From there, you can reveal the chat window via the Obsidian command pallete or ribbon menu.
 - To chat with notes, begin typing '[[' to open a file picker or use the file picker 
 button at the bottom of the chatbox.
+- The LLM is also made aware of your current open notes so you can talk about them without referencing them explicitly.
 
 ![LM Studio Connect chat window](chatview.png)
 ![Connect multiple servers](settings.png)
