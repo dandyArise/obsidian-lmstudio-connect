@@ -1,145 +1,177 @@
 <script lang="ts">
 	import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
-	import { streamText, type ModelMessage } from "ai";
+	import {
+		streamText,
+		stepCountIs,
+		type ModelMessage,
+		type AssistantModelMessage,
+		type ToolModelMessage,
+	} from "ai";
 	import LMStudioConnectPlugin from "src/main";
-	import { Role, SendStatus, Status, type ChatMessage, type InputValue } from "src/services/models";
-	import TopToolbar from "./TopToolbar.svelte";
-	import { tick } from "svelte";
+	import {
+		type Exchange,
+		type InputValue,
+		type ResponseMessage,
+	} from "src/services/models";
 	import { setPluginContext } from "src/services/context";
 	import EmptyView from "./EmptyView.svelte";
-	import Message from "./Message.svelte";
-	import {
-		currentServer,
-		requestServerRefresh,
-		toV1BaseURL,
-	} from "src/settings.svelte";
-	import ErrorMessage from "./ErrorMessage.svelte";
 	import ChatInput from "./ChatInput.svelte";
-	import { t } from "src/i18n";
+	import { createReadFileTool } from "src/llm/tools";
+	import { createCurrentNotesPrompt, createUserPrompt, systemPrompt } from "src/llm/prompts";
+	import TopToolbar from "./TopToolbar.svelte";
+	import ExchangeView from "./Exchange.svelte";
+	import { getOpenFiles } from "src/services/obsidian-utils";
 
 	let { plugin }: { plugin: LMStudioConnectPlugin } = $props();
 	// svelte-ignore state_referenced_locally
 	setPluginContext(plugin);
-
-	let server = $derived(currentServer(plugin.settings));
-	let baseURL = $derived(server ? toV1BaseURL(server.url) : "");
-	let model = $derived(server?.lastUsedModel ?? "");
+	const modelStore = $derived(plugin.modelStore);
 
 	let provider = $derived(
 		createOpenAICompatible({
 			name: "lmstudio",
-			baseURL,
+			baseURL: modelStore.currentBaseUrl,
 		}),
 	);
 
-	let messages: ChatMessage[] = $state([]);
+	let exchanges: Exchange[] = $state([]);
+	let currentExchange: Exchange | undefined = $state();
+	let abortController: AbortController | undefined = $state();
+	let onabort = $derived( abortController ? () => { abortController?.abort(); } : undefined);
 	let bufferHeight = $state(0);
-	let errorMessage = $state("");
-	let status: SendStatus = $state(SendStatus.Idle);
-	let abortController: AbortController | undefined;
-	// svelte-ignore non_reactive_update
-	let messagesContainer: HTMLUListElement;
+	let errored: boolean = false;
 	let input: ChatInput;
 	let cachedInput: InputValue;
-	const gap = 20;
-
-	function toApiMessages(messages: ChatMessage[]): ModelMessage[] {
-		return messages.map((m) => ({
-			role: m.role,
-			content: m.parts.join(""),
-		}));
-	}
 
 	async function onsend() {
+		if (errored) modelStore.refreshAvailableModels();
+
 		const text = await input.text();
-		const html = input.contentHTML()
-		cachedInput = { text, display: html };
-		
+		const display = input.contentHTML();
+		cachedInput = { text, display };
+
 		await send(cachedInput);
 	}
 
-	function onabort() {
-		abortController?.abort("Aborted by user");
-	}
-
 	async function send(message: InputValue) {
-		errorMessage = "";
-		status = SendStatus.Sending;
-		
-		messages.push({
-			role: Role.User,
-			status: Status.Complete,
-			parts: [message.text],
-			display: message.display
+		errored = false;
+		exchanges.push({
+			created: Date.now(),
+			userMessage: {
+				content: message.text,
+				displayHTML: message.display,
+			},
+			response: {
+				status: "in-progress",
+				messages: [],
+			},
+			ai_sdk_messages: [],
 		});
-		messages.push({
-			role: Role.Assistant,
-			status: Status.Pending,
-			parts: [],
-		});
-		
+		currentExchange = exchanges[exchanges.length - 1];
+
 		abortController = new AbortController();
-		const signal = abortController.signal;
+		const abortSignal = abortController.signal;
+
 		const result = streamText({
-			model: provider(model),
-			prompt: toApiMessages(messages.slice(0, -1)),
-			abortSignal: signal,
+			model: provider(modelStore.currentModel),
+			system: systemPrompt,
+			messages: toApiMessages(exchanges),
+			tools: {
+				readFile: createReadFileTool(plugin),
+			},
+			stopWhen: stepCountIs(5),
+			onStepFinish({ staticToolCalls }) {
+				for (const call of staticToolCalls) {
+					currentExchange?.response.messages.push({
+						type: "tool-call",
+						id: call.toolCallId,
+						name: call.toolName,
+						input: call.input,
+					});
+				}
+			},
+			onFinish({ response }) {
+				if (currentExchange) {
+					currentExchange.ai_sdk_messages = response.messages;
+				}
+			},
+			abortSignal,
 			onError({ error }) {
+				errored = true;
 				console.error(error);
-				messages = messages.slice(0, -1);
-				errorMessage = t('errors.somethingWentWrong');
-				requestServerRefresh();
+				modelStore.refreshAvailableModels();
 			},
 		});
 		input.clear();
 
-		await tick();
-		const lastUserMessage = messagesContainer.children[messages.length - 2];
-		bufferHeight =
-			messagesContainer.clientHeight -
-			(lastUserMessage?.clientHeight ?? 0) -
-			gap;
-		
-		const response = messages[messages.length - 1];
-		for await (const textPart of result.textStream) {
-			response.parts.push(textPart);
-			if (response.status === Status.Pending)
-				response.status = Status.Streaming;
+		const finalMessage: ResponseMessage = $state({
+			type: "text",
+			parts: [],
+			isFinal: true,
+		});
+		currentExchange.response.messages.push(finalMessage);
+		for await (const part of result.textStream) {
+			finalMessage.parts.push(part);
 		}
-		response.status = Status.Complete;
-		status = SendStatus.Idle;
+
+		abortController = undefined;
+		currentExchange.response.status = errored ? "error" : "completed";
 	}
 
 	function clearMessages(e: Event) {
 		e.preventDefault();
-		messages = [];
+		exchanges = [];
 	}
 
 	function resend() {
-		requestServerRefresh();
-		messages = messages.slice(0, -1);
+		modelStore.refreshAvailableModels();
+		exchanges = exchanges.slice(0, -1);
 		send(cachedInput);
+	}
+
+	function toApiMessages(exchanges: Exchange[]): ModelMessage[] {
+		const modelMessages: ModelMessage[] = [];
+		const currentNotes: string[] = getOpenFiles(plugin).map(f => f.path); 
+
+		for (let i = 0; i < exchanges.length; i++) {
+			const { userMessage, ai_sdk_messages } = exchanges[i];
+			const query = createUserPrompt(userMessage.content);
+
+			const text = i === 0 
+			? [createCurrentNotesPrompt(currentNotes), query].join('\n\n')
+			: query 
+
+			modelMessages.push({
+				role: "user",
+				content: [{ type: "text", text }],
+			});
+
+			ai_sdk_messages
+				.map( (m) => $state.snapshot(m) as | AssistantModelMessage | ToolModelMessage)
+				.forEach((m) => modelMessages.push(m));
+		}
+
+		return modelMessages;
 	}
 </script>
 
 <div class="lmsc container">
 	<TopToolbar onclear={clearMessages} />
 
-	{#if messages.length}
-		<ul bind:this={messagesContainer} style="--buffer-height: {bufferHeight}px">
-			{#each messages as message}
-				<Message {message} />
+	{#if exchanges.length}
+		<ul
+			bind:clientHeight={bufferHeight}
+			style="--buffer-height: {bufferHeight}px"
+		>
+			{#each exchanges as exchange}
+				<ExchangeView {exchange} onretry={resend} />
 			{/each}
-
-			{#if errorMessage}
-				<ErrorMessage message={errorMessage} onretry={resend} />
-			{/if}
 		</ul>
 	{:else}
 		<EmptyView />
 	{/if}
 
-	<ChatInput bind:this={input} {onsend} {onabort} {status} />
+	<ChatInput bind:this={input} {onsend} {onabort} />
 </div>
 
 <style>
@@ -162,5 +194,10 @@
 		gap: var(--size-4-3);
 		padding: 0;
 		margin: var(--size-4-1) 0;
+	}
+
+	ul > :global(li:last-of-type) {
+		min-height: var(--buffer-height);
+		flex-shrink: 0;
 	}
 </style>

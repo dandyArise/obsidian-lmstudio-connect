@@ -1,50 +1,15 @@
 <script lang="ts">
-	import { requestUrl } from "obsidian";
 	import type { ModelInfo } from "../services/models";
 	import { getPluginContext } from "src/services/context";
-	import {
-		MODELS_ENDPOINT,
-		serverRefreshRequest,
-		type LMStudioServer,
-		type PluginSettings,
-	} from "src/settings.svelte";
-	import type LMStudioConnectPlugin from "src/main";
+	import { type LMStudioServer } from "src/services/settings.svelte";
 	import { tooltip } from "./Tooltip.svelte";
 	import { icon } from "./Icon.svelte";
 	import { t } from "src/i18n";
 
-	const plugin: LMStudioConnectPlugin = getPluginContext();
-	const settings: PluginSettings = plugin.settings;
+	const plugin = getPluginContext();
+	const modelStore = plugin.modelStore;
 
 	let select: HTMLSelectElement | undefined = $state();
-
-	async function listModels(baseURL: String) {
-		try {
-			const response = await requestUrl(`${baseURL + MODELS_ENDPOINT}`);
-			const { data } = response.json as { data: ModelInfo[] };
-			return data;
-		} catch (error) {
-			console.error(
-				`Error calling GET ${MODELS_ENDPOINT} at ${baseURL}: `,
-				error,
-			);
-			throw error;
-		}
-	}
-
-	let listModelsFromAllServers = $derived(async () => {
-		serverRefreshRequest.watch;
-		const listModelsPromises = settings.servers.map((s) =>
-			listModels(s.url),
-		);
-		return Promise.allSettled(listModelsPromises).then((results) => {
-			return results.map((r, i) => ({
-				server: settings.servers[i],
-				connected: r.status === "fulfilled",
-				models: r.status === "fulfilled" ? r.value : [],
-			}));
-		});
-	});
 
 	// Model names are usually formatted like 'company/model' so truncate company if it exists.
 	function formatModelName(name: string) {
@@ -54,64 +19,48 @@
 			: parts[0];
 	}
 
-	function toKey(settings: PluginSettings) {
-		const lastUsedServer = settings.servers.find(
-			(s) => s.name === settings.lastUsedServer,
-		);
-		return lastUsedServer
-			? JSON.stringify({
-					server: lastUsedServer.name,
-					model: lastUsedServer.lastUsedModel,
-				})
-			: undefined;
+	function toSelectOptionValue(server: LMStudioServer) {
+		return JSON.stringify({
+			server: server.name,
+			model: server.lastUsedModel,
+		});
 	}
 
-	function getCurrentModelName(settings: PluginSettings) {
-		const lastUsedServer = settings.servers.find(
-			(s) => s.name === settings.lastUsedServer,
-		);
-		return lastUsedServer?.lastUsedModel
-			? formatModelName(lastUsedServer.lastUsedModel)
-			: t('modelPicker.chooseModel');
-	}
-
-	let value: string | undefined = $state(toKey(settings));
+	let value: string | undefined = $state(
+		modelStore.currentServer 
+		? toSelectOptionValue(modelStore.currentServer) 
+		: undefined,
+	);
 
 	function onchange() {
 		if (value) {
 			const key = JSON.parse(value) as { server: string; model: string };
-
-			const server = settings.servers.find((s) => s.name === key.server);
-			if (server) {
-				server.lastUsedModel = key.model;
-				settings.lastUsedServer = server.name;
-			}
+			modelStore.setCurrentModel(key.server, key.model);
 		}
 	}
 </script>
 
 {#snippet error()}
-	<div
-		class="error"
-		{@attach tooltip(t('modelPicker.verifySettings'))}
-	>
+	<div class="error" {@attach tooltip(t("modelPicker.verifySettings"))}>
 		<span {@attach icon("circle-off")}></span>
-		{t('modelPicker.noModelsFound')}
+		{t("modelPicker.noModelsFound")}
 	</div>
 {/snippet}
 
 {#snippet modelOptions(server: LMStudioServer, models: ModelInfo[])}
 	{#each models as model}
-		<option value={JSON.stringify({ server: server.name, model: model.id })}>
+		<option
+			value={JSON.stringify({ server: server.name, model: model.id })}
+		>
 			{model.id}
 		</option>
 	{/each}
 {/snippet}
 
-{#await listModelsFromAllServers()}
-	<div class="connecting" {@attach tooltip(t('modelPicker.lookingForServer'))}>
+{#await modelStore.listModelsFromAllServers()}
+	<div class="connecting" {@attach tooltip(t("modelPicker.lookingForServer"))}>
 		<span {@attach icon("loader")}></span>
-		{t('modelPicker.connecting')}
+		{t("modelPicker.connecting")}
 	</div>
 {:then modelsByServer}
 	{#if modelsByServer.every((s) => s.models.length === 0)}
@@ -119,12 +68,20 @@
 	{:else}
 		{@const multiserver = modelsByServer.length > 1}
 		<div class="custom-dropdown">
-			<select tabindex='-1' bind:this={select} bind:value {onchange}>
+			<select tabindex="-1" bind:this={select} bind:value {onchange}>
 				{#each modelsByServer as { server, connected, models }}
-				{@const name = server.name === 'default' ? t('serverModal.default') : server.name}
+					{@const name =
+						server.name === "default"
+							? t("serverModal.default")
+							: server.name}
 					{#if multiserver}
-						<optgroup label={name + (!connected ? ` (${t('serverModal.disconnected')})` : "")}
-							disabled={!connected}>
+						<optgroup
+							label={name +
+								(!connected
+									? ` (${t("serverModal.disconnected")})`
+									: "")}
+							disabled={!connected}
+						>
 							{@render modelOptions(server, models)}
 						</optgroup>
 					{:else}
@@ -132,16 +89,22 @@
 					{/if}
 				{/each}
 			</select>
-			<button onclick={() => {
-				if (select?.showPicker) {
-					select.focus();
-					select.showPicker();
-				} else {
-					select?.focus();
-				}
-			}}>
+			<button
+				onclick={() => {
+					if (select?.showPicker) {
+						select.focus();
+						select.showPicker();
+					} else {
+						select?.focus();
+					}
+				}}
+			>
 				<div class="text">
-					<span>{getCurrentModelName(settings)}</span>
+					<span>
+						{modelStore.currentModel
+							? formatModelName(modelStore.currentModel)
+							: t("modelPicker.chooseModel")}
+					</span>
 				</div>
 				<span class="icon" {@attach icon("chevrons-up-down")}></span>
 			</button>
@@ -191,14 +154,14 @@
 	select {
 		appearance: none;
 		padding: unset;
-		height:  1px;
+		height: 1px;
 		background: var(--interactive-normal);
 		box-shadow: none;
 		border: var(--border-width) solid var(--color-black);
 		overflow: hidden;
 		text-overflow: ellipsis;
 		white-space: nowrap;
-		width:1px;
+		width: 1px;
 	}
 
 	select:hover {

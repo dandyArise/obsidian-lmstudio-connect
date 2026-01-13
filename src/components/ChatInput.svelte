@@ -13,19 +13,17 @@
 	} from "./codemirror/filerefwidget";
 	import type { TFile } from "obsidian";
 	import { tooltip } from "./Tooltip.svelte";
-	import { type Replacement, SendStatus } from "src/services/models";
+	import { type Replacement } from "src/services/models";
 	import { getPluginContext } from "src/services/context";
 	import { t } from "src/i18n";
-	import { chatViewActive } from "src/settings.svelte";
+	import { chatViewActive } from "src/services/settings.svelte";
 
 	let {
 		onsend,
 		onabort,
-		status: sendStatus,
 	}: {
 		onsend: () => void;
-		onabort: () => void;
-		status: SendStatus;
+		onabort: (() => void) | undefined;
 	} = $props();
 
 	let plugin = getPluginContext();
@@ -35,6 +33,9 @@
 		editor?.focus();
 	});
 
+	/**
+	 * Returns text with file refs mentioned like [[filename.md]].
+	 */
 	export const text = async () => {
 		const text = editor.state.doc.toString();
 		const fileRefs = editor.state.field(fileReferenceField);
@@ -42,12 +43,15 @@
 			return text;
 		}
 
+		//NOTE: if we go this route, codemirror can do this anyway cant it?
+		//the inserfileref would insert and then replace it, then the above
+		//toString would obviate this.
+
 		//swap file ref markers for their actual note content
 		let replacements: Replacement[] = [];
 		for (let iter = fileRefs.iter(); iter.value; iter.next()) {
 			const file: TFile = iter.value.spec.file;
-			const fileContent = await plugin.app.vault.cachedRead(file);
-			const inserted = `[begin obsidian note: ${file.name}] ${fileContent} [/end obsidian note]`;
+			const inserted = `[[${file.path}]]`;
 			replacements.push({
 				from: iter.from,
 				to: iter.to,
@@ -213,7 +217,7 @@
 				{@attach tooltip(t("chat.addNoteReference"))}
 				aria-label={t("chat.addNoteReference")}
 			></button>
-			{#if sendStatus === SendStatus.Sending}
+			{#if onabort}
 				<button
 					class="cancel"
 					onclick={onabort}

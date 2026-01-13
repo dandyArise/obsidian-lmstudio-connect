@@ -1,0 +1,81 @@
+import { requestUrl } from "obsidian";
+import { MODELS_ENDPOINT, type LMStudioServer, type PluginSettings } from "src/services/settings.svelte";
+import type { ModelInfo } from "./models";
+
+/**
+* Provides access to available LLM models from the server URLs.
+* Also provides functions to refresh the list of available servers
+* and perhaps to hold the active server and model and keep it
+* synced with settings.
+**/
+export class ModelStore {
+	private _settings: PluginSettings;
+	private _currentServer: LMStudioServer | undefined = $state();
+	private _currentModel = $state("");
+	private _serverRefreshRequested = $state(0);
+
+	currentBaseUrl: string = $derived(this._currentServer ? this._currentServer.url + '/v1' : "");
+
+	constructor(settings: PluginSettings) {
+		this._settings = settings;
+		this._currentServer = settings.servers.find(s => s.name === settings.lastUsedServer);
+		this._currentModel = this._currentServer?.lastUsedModel ?? "";
+	}
+
+	get currentServer() {
+		return this._currentServer;
+	}
+
+	get currentModel() {
+		return this._currentModel;
+	}
+
+	setCurrentModel(serverName: string, model: string) {
+		const server = this._settings.servers.find(s => s.name === serverName);
+		if (server) {
+			server.lastUsedModel = model;
+			this._settings.lastUsedServer = serverName;
+			this._currentServer = server;
+			this._currentModel = model;
+		}
+	}
+
+	async #listModels(baseURL: string) {
+		try {
+			const response = await requestUrl(`${baseURL + MODELS_ENDPOINT}`);
+			const { data } = response.json as { data: ModelInfo[] };
+			return data;
+		} catch (error) {
+			console.error(
+				`Error calling GET ${MODELS_ENDPOINT} at ${baseURL}: `,
+				error,
+			);
+			throw error;
+		}
+	}
+
+	refreshAvailableModels() {
+		this._serverRefreshRequested += 1;
+	}
+
+	/**
+	* Provides an awaitable function for getting the 
+	* current state of all servers and models.
+	**/
+	listModelsFromAllServers = $derived.by(() => {
+		this._serverRefreshRequested;
+		return (async () => {
+			const listModelsPromises = this._settings.servers.map((s) =>
+				this.#listModels(s.url),
+			);
+			return Promise.allSettled(listModelsPromises).then((results) => {
+				return results.map((r, i) => ({
+					server: this._settings.servers[i],
+					connected: r.status === "fulfilled",
+					models: r.status === "fulfilled" ? r.value : [],
+				}));
+			});
+		});
+	});
+
+}

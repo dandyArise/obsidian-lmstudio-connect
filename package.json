@@ -1,6 +1,6 @@
 {
 	"name": "LM Studio Connect",
-	"version": "1.0.7",
+	"version": "1.0.8",
 	"description": "Adds an AI chat interface that connects to LM Studio so you can chat with your notes privately and offline.",
 	"main": "main.js",
 	"scripts": {
@@ -32,9 +32,10 @@
 		"typescript": "~5.0.0"
 	},
 	"dependencies": {
-		"@ai-sdk/openai-compatible": "^1.0.29",
+		"@ai-sdk/openai": "^3.0.7",
+		"@ai-sdk/openai-compatible": "^2.0.4",
 		"@floating-ui/dom": "^1.7.4",
-		"ai": "^5.0.113",
+		"ai": "^6.0.23",
 		"codemirror": "^6.0.2",
 		"i18next": "^25.7.3",
 		"zod": "^4.2.1"

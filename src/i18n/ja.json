@@ -1,13 +1,13 @@
 {
   "plugin": {
     "name": "LM Studio Connect",
-    "openCommand": "{{name}}を開く"
+    "openCommand": "LM Studio Connectを開く"
   },
   "commands": {
     "openChatView": "チャットビューを開く"
   },
   "settings": {
-    "serverName": "{{name}} サーバー",
+    "serverName": "LM Studioのサーバー",
     "serverDescription": "1つまたは複数のサーバーへの接続を設定します。",
     "manage": "管理"
   },
@@ -36,6 +36,11 @@
     "clearChat": "チャットをクリア",
     "retry": "再試行",
 	"cancel": "キャンセル"
+  },
+  "messages": {
+	  "tool-call": {
+		  "readFile": "{{filePath}} を読み込みました"
+	   }
   },
   "modelPicker": {
     "chooseModel": "モデルを選択...",

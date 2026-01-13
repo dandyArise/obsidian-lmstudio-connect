@@ -8,16 +8,16 @@ export const i18n = i18next.createInstance();
 const lng = getLanguage();
 
 void i18n.init({
-  lng,
-  fallbackLng: 'en',
-  resources: {
-    en: { translation: en },
-	ja: { translation: ja },
-	zh: { translation: zh }
-  },
-  interpolation: {
-    escapeValue: false
-  }
+	lng,
+	fallbackLng: 'en',
+	resources: {
+		en: { translation: en },
+		ja: { translation: ja },
+		zh: { translation: zh }
+	},
+	interpolation: {
+		escapeValue: false
+	},
 });
 
 export const t = i18n.t.bind(i18n);
