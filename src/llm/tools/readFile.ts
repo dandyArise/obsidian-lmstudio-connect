@@ -13,10 +13,7 @@ Usage:
 const readFileSchema = z.object({ 
   filePath: z.string().describe("The path to the file to read") 
 });
-export interface ToolInputs {
-  readFile: ReadFileInput;
-}
-type ReadFileInput = z.infer<typeof readFileSchema>;
+export type ReadFileInput = z.infer<typeof readFileSchema>;
 export function createReadFileTool(plugin: LMStudioConnectPlugin) {
 	return tool({
 		description: DESCRIPTION,

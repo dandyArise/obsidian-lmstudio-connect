@@ -12,11 +12,13 @@
 		type Exchange,
 		type InputValue,
 		type ResponseMessage,
+		type ToolCallMessage,
 	} from "src/services/models";
 	import { setPluginContext } from "src/services/context";
 	import EmptyView from "./EmptyView.svelte";
 	import ChatInput from "./ChatInput.svelte";
-	import { createReadFileTool } from "src/llm/tools";
+	import { createReadFileTool } from "src/llm/tools/readFile";
+	import { createWebFetchTool } from "src/llm/tools/webFetch";
 	import { createCurrentNotesPrompt, createUserPrompt, systemPrompt } from "src/llm/prompts";
 	import TopToolbar from "./TopToolbar.svelte";
 	import ExchangeView from "./Exchange.svelte";
@@ -78,6 +80,7 @@
 			messages: toApiMessages(exchanges),
 			tools: {
 				readFile: createReadFileTool(plugin),
+				webFetch: createWebFetchTool()
 			},
 			stopWhen: stepCountIs(5),
 			onStepFinish({ staticToolCalls }) {
@@ -87,7 +90,7 @@
 						id: call.toolCallId,
 						name: call.toolName,
 						input: call.input,
-					});
+					} as ToolCallMessage);
 				}
 			},
 			onFinish({ response }) {

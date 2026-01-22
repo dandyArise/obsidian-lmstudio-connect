@@ -39,7 +39,8 @@
   },
   "messages": {
 	  "tool-call": {
-		  "readFile": "{{filePath}} を読み込みました"
+		  "readFile": "{{filePath}} を読み込みました",
+		  "webFetch": "{{url}} を閲覧中"
 	   }
   },
   "modelPicker": {

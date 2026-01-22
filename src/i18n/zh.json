@@ -39,7 +39,8 @@
   },
   "messages": {
 	  "tool-call": {
-		  "readFile": "已读取 {{filePath}}"
+		  "readFile": "已读取 {{filePath}}",
+          "webFetch": "正在浏览 {{url}}"
 	   }
   },
   "modelPicker": {

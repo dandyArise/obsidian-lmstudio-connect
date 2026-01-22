@@ -1,7 +1,8 @@
 //models (interfaces/types, not llms...)
 
 import type { AssistantModelMessage, ToolModelMessage } from "ai";
-import type { ToolInputs } from "src/llm/tools";
+import type { ReadFileInput } from "src/llm/tools/readFile";
+import type { WebFetchInput } from "src/llm/tools/webFetch";
 
 export interface ModelInfo {
 	id: string,
@@ -24,6 +25,10 @@ export interface Replacement {
 }
 export interface InputValue { text: string, markdownFiles?: string[], display: string }
 
+export interface ToolInputs {
+  readFile: ReadFileInput;
+  webFetch: WebFetchInput;
+}
 export type ToolCallMessage = {
   [K in keyof ToolInputs]: { 
     type: "tool-call"; 
