@@ -55,6 +55,7 @@ export default class LMStudioConnectPlugin extends Plugin {
 				const host = new CodeBlockChatHost(el, this, config);
 				ctx.addChild(host);
 			} catch (error) {
+				console.error(error);
 				await this.appendFailureCallout(el, t('errors.codeBlockYamlParseError'), mdRenderChild);
 				return Promise.resolve();
 			}

@@ -24,7 +24,7 @@ export class CodeBlockChatHost extends MarkdownRenderChild {
 
 	onunload(): void {
 		if (this.codeBlockChat) {
-			unmount(this.codeBlockChat);
+			void unmount(this.codeBlockChat);
 		}
 	}
 }
