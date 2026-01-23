@@ -33,6 +33,7 @@
     "placeholder": "Send a message to the model...",
     "send": "Send",
     "addNoteReference": "Add note reference",
+	"prompt": "Prompt",
     "clearChat": "Clear chat",
     "retry": "Retry",
 	"cancel": "Cancel"
@@ -55,6 +56,7 @@
     "noMatch": "No match found"
   },
   "errors": {
-    "somethingWentWrong": "Something went wrong.  Is LM Studio connected?"
+    "somethingWentWrong": "Something went wrong.  Is LM Studio connected?",
+	"codeBlockYamlParseError": "Invalid configuration.  Missing prompt?"
   }
 }

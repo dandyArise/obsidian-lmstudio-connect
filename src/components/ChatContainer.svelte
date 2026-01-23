@@ -3,12 +3,10 @@
 	import {
 		streamText,
 		stepCountIs,
-		type ModelMessage,
-		type AssistantModelMessage,
-		type ToolModelMessage,
 	} from "ai";
 	import LMStudioConnectPlugin from "src/main";
 	import {
+	toApiMessages,
 		type Exchange,
 		type InputValue,
 		type ResponseMessage,
@@ -19,10 +17,9 @@
 	import ChatInput from "./ChatInput.svelte";
 	import { createReadFileTool } from "src/llm/tools/readFile";
 	import { createWebFetchTool } from "src/llm/tools/webFetch";
-	import { createCurrentNotesPrompt, createUserPrompt, systemPrompt } from "src/llm/prompts";
+	import { systemPrompt } from "src/llm/prompts";
 	import TopToolbar from "./TopToolbar.svelte";
 	import ExchangeView from "./Exchange.svelte";
-	import { getOpenFiles } from "src/services/obsidian-utils";
 
 	let { plugin }: { plugin: LMStudioConnectPlugin } = $props();
 	// svelte-ignore state_referenced_locally
@@ -77,7 +74,7 @@
 		const result = streamText({
 			model: provider(modelStore.currentModel),
 			system: systemPrompt,
-			messages: toApiMessages(exchanges),
+			messages: toApiMessages(plugin, exchanges),
 			tools: {
 				readFile: createReadFileTool(plugin),
 				webFetch: createWebFetchTool()
@@ -132,30 +129,6 @@
 		send(cachedInput);
 	}
 
-	function toApiMessages(exchanges: Exchange[]): ModelMessage[] {
-		const modelMessages: ModelMessage[] = [];
-		const currentNotes: string[] = getOpenFiles(plugin).map(f => f.path); 
-
-		for (let i = 0; i < exchanges.length; i++) {
-			const { userMessage, ai_sdk_messages } = exchanges[i];
-			const query = createUserPrompt(userMessage.content);
-
-			const text = i === 0 
-			? [createCurrentNotesPrompt(currentNotes), query].join('\n\n')
-			: query 
-
-			modelMessages.push({
-				role: "user",
-				content: [{ type: "text", text }],
-			});
-
-			ai_sdk_messages
-				.map( (m) => $state.snapshot(m) as | AssistantModelMessage | ToolModelMessage)
-				.forEach((m) => modelMessages.push(m));
-		}
-
-		return modelMessages;
-	}
 </script>
 
 <div class="lmsc container">

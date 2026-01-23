@@ -14,9 +14,10 @@
 	import type { TFile } from "obsidian";
 	import { tooltip } from "./Tooltip.svelte";
 	import { type Replacement } from "src/services/models";
-	import { getPluginContext } from "src/services/context";
 	import { t } from "src/i18n";
 	import { chatViewActive } from "src/services/settings.svelte";
+	import CancelButton from "./CancelButton.svelte";
+	import SendButton from "./SendButton.svelte";
 
 	let {
 		onsend,
@@ -25,8 +26,6 @@
 		onsend: () => void;
 		onabort: (() => void) | undefined;
 	} = $props();
-
-	let plugin = getPluginContext();
 
 	$effect(() => {
 		chatViewActive.watch;
@@ -218,22 +217,9 @@
 				aria-label={t("chat.addNoteReference")}
 			></button>
 			{#if onabort}
-				<button
-					class="cancel"
-					onclick={onabort}
-					{@attach icon("square")}
-					{@attach tooltip(t("chat.cancel"))}
-					aria-label={t("chat.cancel")}
-				></button>
+				<CancelButton onclick={onabort} />	
 			{:else}
-				<button
-					class="send"
-					onclick={onsend}
-					disabled={!canSend}
-					{@attach icon("arrow-up")}
-					{@attach tooltip(t("chat.send"))}
-					aria-label={t("chat.send")}
-				></button>
+				<SendButton onclick={onsend} disabled={!canSend} />
 			{/if}
 		</div>
 	</div>
@@ -366,38 +352,7 @@
 	button.addFileRef:hover {
 		background-color: var(--interactive-hover);
 	}
-	button.addFileRef:focus,
-	button.cancel:focus {
+	button.addFileRef:focus {
 		background-color: var(--background-modifier-border-focus);
-	}
-
-	button.cancel {
-		border-radius: 50%;
-		color: var(--interactive-accent);
-		box-shadow: none;
-		padding: var(--size-2-2) var(--size-2-3);
-	}
-	button.cancel :global(svg) {
-		fill: var(--interactive-accent);
-	}
-
-	button.send {
-		color: var(--text-on-accent);
-		border-radius: 50%;
-		box-shadow: none;
-		padding: var(--size-2-2) var(--size-2-3);
-	}
-	button.send:enabled {
-		background-color: var(--interactive-accent);
-		transition: all var(--anim-duration-fast) ease-in-out;
-	}
-	button.send:hover {
-		background-color: var(--interactive-accent-hover);
-	}
-	button.send:disabled,
-	button.send:disabled:hover {
-		background-color: var(--background-primary);
-		color: var(--text-muted);
-		opacity: 0.6;
 	}
 </style>

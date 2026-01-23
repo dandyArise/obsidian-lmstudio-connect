@@ -5,7 +5,7 @@ export const extractTextFromHTML = (htmlString: string) => {
 
 		const parser = new DOMParser();
 		const doc = parser.parseFromString(htmlString, 'text/html');
-		let pieces: string[] = [];
+		const pieces: string[] = [];
 
 		const walk = (node: Node) => {
 			if (node.nodeType === Node.ELEMENT_NODE) {

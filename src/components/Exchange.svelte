@@ -13,10 +13,11 @@
 	import ErrorMessage from "./ErrorMessage.svelte";
 
 	let plugin = getPluginContext();
-	let { exchange, onretry }: { exchange: Exchange; onretry: () => void } =
-		$props();
-	let { userMessage, response } = $derived(exchange);
+	let { exchange, onretry, hideUserMessage = false, hideToolUse = false }
+	: { exchange: Exchange; onretry: () => void, hideUserMessage?: boolean, hideToolUse?: boolean } 
+	= $props();
 
+	let { userMessage, response } = $derived(exchange);
 	const messages = $derived(sort(response.messages));
 
 	function markdown(content: string): Attachment {
@@ -43,9 +44,11 @@
 </script>
 
 <li in:fade {@attach scroll}>
-	<div class="user">
-		{@html userMessage.displayHTML}
-	</div>
+	{#if !hideUserMessage}
+		<div class="user">
+			{@html userMessage.displayHTML}
+		</div>
+	{/if}
 	<div class={["response", response.status]}>
 		<span class="spinner" {@attach icon("loader")}></span>
 		{#each messages as message}
@@ -58,7 +61,7 @@
 					{#key message.parts}
 						<div {@attach markdown(message.parts.join(""))}></div>
 					{/key}
-				{:else if message.type === "tool-call"}
+				{:else if !hideToolUse && message.type === "tool-call"}
 					<span {@attach icon("arrow-right")}></span>
 					{t(`messages.tool-call.${message.name}`, message.input)}
 				{/if}

@@ -1,9 +1,11 @@
-import { Plugin, WorkspaceLeaf } from 'obsidian';
+import { Component, MarkdownRenderChild, MarkdownRenderer, Plugin, WorkspaceLeaf, parseYaml } from 'obsidian';
 import { ChatView, VIEW_TYPE_CHAT } from './chatview';
 import { SettingsTab, } from './settingstab';
 import { type PluginSettings, createSettings, signalChatViewActive } from './services/settings.svelte';
 import { t } from './i18n';
 import { ModelStore } from './services/models-store.svelte';
+import { Config } from './services/models';
+import { CodeBlockChatHost } from './codeblockchathost';
 
 export default class LMStudioConnectPlugin extends Plugin {
 	settings: PluginSettings;
@@ -43,6 +45,24 @@ export default class LMStudioConnectPlugin extends Plugin {
 				signalChatViewActive();
 			}
 		}));
+
+		this.registerMarkdownCodeBlockProcessor('lmsc', async (source, el, ctx) => {
+			const mdRenderChild = new MarkdownRenderChild(el);
+			ctx.addChild(mdRenderChild);
+
+			try {
+				const config = Config.parse(parseYaml(source));
+				const host = new CodeBlockChatHost(el, this, config);
+				ctx.addChild(host);
+			} catch (error) {
+				await this.appendFailureCallout(el, t('errors.codeBlockYamlParseError'), mdRenderChild);
+				return Promise.resolve();
+			}
+		});
+	}
+
+	async appendFailureCallout(el: HTMLElement, text: string, component: Component): Promise<void> {
+		await MarkdownRenderer.render(this.app, `> [!failure] \n> ${text}`, el, "", component);
 	}
 
 	onunload() {
