@@ -33,9 +33,10 @@
     "placeholder": "向模型发送消息...",
     "send": "发送",
     "addNoteReference": "添加笔记引用",
+    "prompt": "提示词",
     "clearChat": "清除聊天",
     "retry": "重试",
-	"cancel":"取消"
+    "cancel": "取消"
   },
   "messages": {
 	  "tool-call": {
@@ -55,6 +56,7 @@
     "noMatch": "未找到匹配项"
   },
   "errors": {
-    "somethingWentWrong": "出错了。LM Studio 是否已连接？"
+    "somethingWentWrong": "出错了。LM Studio 是否已连接？",
+    "codeBlockYamlParseError": "配置无效。缺少提示词？"
   }
 }

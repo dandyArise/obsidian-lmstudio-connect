@@ -33,9 +33,10 @@
     "placeholder": "モデルにメッセージを送信...",
     "send": "送信",
     "addNoteReference": "ノートの参照を追加",
+    "prompt": "プロンプト",
     "clearChat": "チャットをクリア",
     "retry": "再試行",
-	"cancel": "キャンセル"
+    "cancel": "キャンセル"
   },
   "messages": {
 	  "tool-call": {
@@ -55,6 +56,7 @@
     "noMatch": "一致する項目がありません"
   },
   "errors": {
-    "somethingWentWrong": "エラーが発生しました。LM Studioは接続されていますか？"
+    "somethingWentWrong": "エラーが発生しました。LM Studioは接続されていますか？",
+    "codeBlockYamlParseError": "設定が無効です。プロンプトがありませんか？"
   }
 }
