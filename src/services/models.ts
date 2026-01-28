@@ -70,7 +70,7 @@ export function toApiMessages(plugin: LMStudioConnectPlugin, exchanges: Exchange
 		});
 
 		ai_sdk_messages
-			.map( (m) => $state.snapshot(m) as | AssistantModelMessage | ToolModelMessage)
+			.map( (m) => m as | AssistantModelMessage | ToolModelMessage)
 			.forEach((m) => modelMessages.push(m));
 	}
 
