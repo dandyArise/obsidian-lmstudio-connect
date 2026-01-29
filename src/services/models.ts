@@ -69,9 +69,7 @@ export function toApiMessages(plugin: LMStudioConnectPlugin, exchanges: Exchange
 			content: [{ type: "text", text }],
 		});
 
-		ai_sdk_messages
-			.map( (m) => m as | AssistantModelMessage | ToolModelMessage)
-			.forEach((m) => modelMessages.push(m));
+		ai_sdk_messages.forEach((m) => modelMessages.push(m));
 	}
 
 	return modelMessages;
