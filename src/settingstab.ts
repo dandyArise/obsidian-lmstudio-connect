@@ -12,6 +12,7 @@ export class SettingsTab extends PluginSettingTab {
 	constructor(app: App, plugin: LMStudioConnectPlugin) {
 		super(app, plugin);
 		this.plugin = plugin;
+		this.icon = "bot-message-square";
 	}
 
 	display(): void {
