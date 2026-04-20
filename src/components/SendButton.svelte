@@ -3,7 +3,8 @@
 	import { icon } from "./Icon.svelte";
 	import { tooltip } from "./Tooltip.svelte";
 
-	let { onclick, disabled }: { onclick: () => void; disabled: boolean } = $props();
+	let { onclick, disabled }: { onclick: () => void; disabled: boolean } =
+		$props();
 </script>
 
 <button
@@ -21,6 +22,7 @@
 		border-radius: 50%;
 		box-shadow: none;
 		padding: var(--size-2-2) var(--size-2-3);
+		aspect-ratio: 1 / 1;
 	}
 	button.send:enabled {
 		background-color: var(--interactive-accent);

@@ -295,6 +295,7 @@
 
 	.editor :global(.cm-editor .cm-cursor) {
 		border-left-color: var(--caret-color);
+		margin-left: -0.2px;
 	}
 	.editor :global(.cm-editor .cm-content) {
 		font-size: var(--font-ui-small);
@@ -348,6 +349,7 @@
 		box-shadow: none;
 		padding: var(--size-2-2) var(--size-2-3);
 		background-color: transparent;
+		aspect-ratio: 1 / 1;
 	}
 	button.addFileRef:hover {
 		background-color: var(--interactive-hover);
