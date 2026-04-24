@@ -3,6 +3,9 @@ span.lmsc-icon {
 	align-items: center;
 }
 
+div.lmsc.container {
+	user-select: text;
+}
 
 @keyframes spin {
 	from {
