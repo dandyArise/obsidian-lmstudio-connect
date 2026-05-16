@@ -40,8 +40,8 @@ class FileReferenceWidget extends WidgetType {
 		return this.name == other.name
 	}
 	toDOM() {
-		const elt = document.createElement("span")
-		const textWrap = document.createElement("span");
+		const elt = createSpan();
+		const textWrap = createSpan();
 		textWrap.appendText(this.name);
 		elt.addClass("cm-file-ref-widget");
 		setIcon(elt, "sticky-note");	
