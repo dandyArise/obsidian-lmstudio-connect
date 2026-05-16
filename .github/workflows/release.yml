@@ -32,7 +32,7 @@ jobs:
 
       - name: create release
         env:
-		  GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ github.token }}
         run: |
           tag="${github_ref#refs/tags/}"
 
