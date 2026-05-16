@@ -34,7 +34,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          tag="${github_ref#refs/tags/}"
+          tag="${{ github.ref_name }}"
 
           gh release create "$tag" \
             --title="$tag" \
