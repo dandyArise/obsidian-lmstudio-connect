@@ -8,12 +8,13 @@ export interface PluginSettings {
 export interface LMStudioServer {
 	name: string;
 	url: string;
+	apiKey: string;
 	lastUsedModel: string
 }
 
 export const MODELS_ENDPOINT = '/v1/models';
 export const DEFAULT_SERVER_URL = 'http://127.0.0.1:1234';
-const DEFAULT_SERVER: LMStudioServer = { name: 'default', url: DEFAULT_SERVER_URL, lastUsedModel: '' };
+const DEFAULT_SERVER: LMStudioServer = { name: 'default', url: DEFAULT_SERVER_URL, apiKey: '', lastUsedModel: '' };
 const DEFAULT_SETTINGS: Partial<PluginSettings> = {
 	lastUsedServer: DEFAULT_SERVER.name,
 	servers: [DEFAULT_SERVER]
@@ -41,7 +42,10 @@ export async function createSettings(persistence: PersistenceConfig) {
 		}
 		
 		// remove whitespace and trailing slashes
-		saved.servers.forEach(s => s.url = s.url.trim().replace(/\/+$/, ''));
+		saved.servers.forEach(s => {
+			s.url = s.url.trim().replace(/\/+$/, '');
+			s.apiKey = s.apiKey?.trim() ?? '';
+		});
 
 		return saved;
 	});

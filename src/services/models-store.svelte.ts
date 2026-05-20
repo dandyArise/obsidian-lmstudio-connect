@@ -30,6 +30,10 @@ export class ModelStore {
 		return this._currentModel;
 	}
 
+	get currentApiKey() {
+		return this._currentServer?.apiKey ?? "";
+	}
+
 	setCurrentModel(serverName: string, model: string) {
 		const server = this._settings.servers.find(s => s.name === serverName);
 		if (server) {
@@ -40,14 +44,17 @@ export class ModelStore {
 		}
 	}
 
-	async #listModels(baseURL: string) {
+	async #listModels(server: LMStudioServer) {
 		try {
-			const response = await requestUrl(`${baseURL + MODELS_ENDPOINT}`);
+			const response = await requestUrl({
+				url: `${server.url + MODELS_ENDPOINT}`,
+				headers: server.apiKey ? { Authorization: `Bearer ${server.apiKey}` } : undefined,
+			});
 			const { data } = response.json as { data: ModelInfo[] };
 			return data;
 		} catch (error) {
 			console.error(
-				`Error calling GET ${MODELS_ENDPOINT} at ${baseURL}: `,
+				`Error calling GET ${MODELS_ENDPOINT} at ${server.url}: `,
 				error,
 			);
 			throw error;
@@ -66,7 +73,7 @@ export class ModelStore {
 		void this._serverRefreshRequested;
 		return (async () => {
 			const listModelsPromises = this._settings.servers.map((s) =>
-				this.#listModels(s.url),
+				this.#listModels(s),
 			);
 			return Promise.allSettled(listModelsPromises).then((results) => {
 				return results.map((r, i) => ({

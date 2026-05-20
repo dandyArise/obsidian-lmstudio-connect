@@ -20,6 +20,7 @@
     "server": "サーバー",
     "displayNamePlaceholder": "表示名",
     "urlInputPlaceholder": "URL",
+    "apiKeyPlaceholder": "API key (optional)",
     "add": "追加",
     "addAdditionalServers": "サーバーを追加",
     "save": "保存",

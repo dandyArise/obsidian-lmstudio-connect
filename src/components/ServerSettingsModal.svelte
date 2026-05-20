@@ -24,6 +24,7 @@
 			return {
 				name: s.name,
 				url: s.url,
+				apiKey: s.apiKey ?? "",
 				status: "pending",
 				isDefault: s.name === "default",
 			};
@@ -35,10 +36,12 @@
 	let addControlsVisible = $state(false);
 	let additionalServerName = $state("");
 	let additionalServerURL = $state("");
+	let additionalServerApiKey = $state("");
 
 	let form: HTMLFormElement;
 	let additionalServerNameInput: HTMLInputElement;
 	let additionalServerURLInput: HTMLInputElement;
+	let additionalServerApiKeyInput: HTMLInputElement;
 	let showCORStip = $state(false);
 
 	async function showAddControls() {
@@ -78,6 +81,7 @@
 		servers.push({
 			name: additionalServerName,
 			url: additionalServerURL,
+			apiKey: additionalServerApiKey.trim(),
 			status: "pending",
 			isDefault: false,
 		});
@@ -97,7 +101,10 @@
 		server.status = "pending";
 		let ok = false;
 		try {
-			const resp = await requestUrl(server.url + MODELS_ENDPOINT);
+			const resp = await requestUrl({
+				url: server.url + MODELS_ENDPOINT,
+				headers: server.apiKey ? { Authorization: `Bearer ${server.apiKey}` } : undefined,
+			});
 			ok = resp.status == 200 ? true : false; //might return 200 when not ok tho.
 		} catch (e) {
 			console.error(e);
@@ -182,6 +189,16 @@
 							? DEFAULT_SERVER_URL
 							: t('serverModal.urlPlaceholder')}
 					/>
+					<input
+						type="password"
+						bind:value={server.apiKey}
+						oninput={() => {
+							server.status = "pending";
+							debouncedHealthCheck(server);
+						}}
+						size="18"
+						placeholder={t('serverModal.apiKeyPlaceholder')}
+					/>
 					<button
 						disabled={server.isDefault}
 						class="remove clickable-icon"
@@ -211,6 +228,13 @@
 					size="22"
 					required
 					placeholder={t('serverModal.urlInputPlaceholder')}
+				/>
+				<input
+					type="password"
+					bind:this={additionalServerApiKeyInput}
+					bind:value={additionalServerApiKey}
+					size="18"
+					placeholder={t('serverModal.apiKeyPlaceholder')}
 				/>
 				<button onclick={addServer}>{t('serverModal.add')}</button>
 			</form>

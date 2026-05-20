@@ -6,13 +6,15 @@ import type { ServerConnection } from "./services/models";
 import { t } from "./i18n";
 import { type PluginSettings, type LMStudioServer } from "./services/settings.svelte";
 
+const SETTINGS_ICON = "bot";
+
 export class SettingsTab extends PluginSettingTab {
 	plugin: LMStudioConnectPlugin;
 
 	constructor(app: App, plugin: LMStudioConnectPlugin) {
 		super(app, plugin);
 		this.plugin = plugin;
-		this.icon = "bot-message-square";
+		this.icon = SETTINGS_ICON;
 	}
 
 	display(): void {
@@ -39,10 +41,11 @@ export class SettingsTab extends PluginSettingTab {
 								const existing = current.find(c => c.name === s.name);
 								if (existing) {
 									existing.url = s.url;
+									existing.apiKey = s.apiKey;
 									return;
 								}
 
-								current.push({ name: s.name, url: s.url, lastUsedModel: '' });
+								current.push({ name: s.name, url: s.url, apiKey: s.apiKey, lastUsedModel: '' });
 							});
 
 							current.filter(c => !servers.find(s => s.name === c.name))

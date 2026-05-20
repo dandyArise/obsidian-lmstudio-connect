@@ -5,6 +5,7 @@ import type LMStudioConnectPlugin from './main';
 import { t } from './i18n';
 
 export const VIEW_TYPE_CHAT = 'chat-view';
+const VIEW_ICON = 'bot';
 
 export class ChatView extends ItemView {
 	plugin: LMStudioConnectPlugin;
@@ -24,7 +25,7 @@ export class ChatView extends ItemView {
 	}
 
 	getIcon(): string {
-		return 'bot-message-square';
+		return VIEW_ICON;
 	}
 
 	async onOpen() {

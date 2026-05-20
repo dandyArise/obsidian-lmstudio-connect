@@ -20,6 +20,7 @@
     "server": "服务器",
     "displayNamePlaceholder": "显示名称",
     "urlInputPlaceholder": "URL",
+    "apiKeyPlaceholder": "API key (optional)",
     "add": "添加",
     "addAdditionalServers": "添加其他服务器",
     "save": "保存",

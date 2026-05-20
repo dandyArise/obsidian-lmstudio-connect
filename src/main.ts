@@ -7,6 +7,8 @@ import { ModelStore } from './services/models-store.svelte';
 import { Config } from './services/models';
 import { CodeBlockChatHost } from './codeblockchathost';
 
+const PLUGIN_ICON = 'bot';
+
 export default class LMStudioConnectPlugin extends Plugin {
 	settings: PluginSettings;
 	modelStore: ModelStore;
@@ -28,7 +30,7 @@ export default class LMStudioConnectPlugin extends Plugin {
 			(leaf) => new ChatView(leaf, this)
 		);
 
-		this.addRibbonIcon('bot-message-square', t('plugin.openCommand'), () => {
+		this.addRibbonIcon(PLUGIN_ICON, t('plugin.openCommand'), () => {
 			void this.activateView()
 		});
 

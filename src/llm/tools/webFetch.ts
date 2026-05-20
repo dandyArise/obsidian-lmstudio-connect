@@ -17,6 +17,7 @@ Usage notes:
   - HTTP URLs will be automatically upgraded to HTTPS
   - Format options: "markdown" (default), "text", or "html"
   - This tool is read-only and does not modify any files
+  - Optional API key can be provided for Authorization header
   - Results may be truncated large`;
 
 const webFetchSchema = z.object({
@@ -26,6 +27,7 @@ const webFetchSchema = z.object({
 		.default("markdown")
 		.describe("The format to return the content in (text, markdown, or html). Defaults to markdown."),
 	timeout: z.number().describe("Optional timeout in seconds (max 120)").optional(),
+	apiKey: z.string().optional().describe("Optional API key for Authorization header"),
 });
 export type WebFetchInput = z.infer<typeof webFetchSchema>;
 
@@ -71,6 +73,7 @@ export const createWebFetchTool = () => {
 						"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36",
 					Accept: acceptHeader,
 					"Accept-Language": "en-US,en;q=0.9",
+					...(params.apiKey ? { "Authorization": `Bearer ${params.apiKey}` } : {}),
 				}
 			});
 

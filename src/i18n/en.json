@@ -20,6 +20,7 @@
     "server": "Server",
     "displayNamePlaceholder": "Display Name",
     "urlInputPlaceholder": "URL",
+    "apiKeyPlaceholder": "API key (optional)",
     "add": "Add",
     "addAdditionalServers": "Add additional servers",
     "save": "Save",
